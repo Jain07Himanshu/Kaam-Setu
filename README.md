@@ -173,7 +173,16 @@ KaamSetu/
 
 ### 1. Customer Application (Port 5173)
 
-#### 🏠 Home Page (`/`)
+#### 🔐 Landing Page & Authentication Gateway (`/`)
+- **Seamless Gateway for New & Returning Users**: When an unauthenticated visitor opens the customer application, they are greeted by the **Kaam Setu Landing & Authentication Gateway**.
+- **Role Switching**: Allows switching between Customer and Worker Pro portals with a single click.
+- **Login / Registration Tabs**:
+  - **Sign In**: Direct email and password authentication with immediate JWT issuance.
+  - **Register as Customer**: Create a new customer profile with Full Name, Email, Phone, Password, Address, City (e.g. Mumbai, Delhi, Bengaluru), and Postal Code. All details are securely persisted to the central database, and the user is immediately transitioned to the Customer Dashboard.
+  - **Quick 1-Click Demo Logins**: Fast-track buttons to test with pre-seeded personas (Aarav Sharma, Pooja Patel) without manual typing.
+- **Logout**: An intuitive logout button in the navigation bar clears the local session and safely returns the user to the landing page.
+
+#### 🏠 Customer Home Dashboard (`/`)
 - **Brand Navigation Header**: Displays the official Kaam Setu logo, location indicator (e.g. *Powai, Mumbai 400076*), unread notifications bell, and the instant **Demo Switcher**.
 - **Active Service Tracking Banner**: Automatically appears when a booking is in progress, showing the assigned pro's name, agreed price in ₹, service status, and the 4-digit start OTP.
 - **Service Search & 8 Core Trade Categories**:
@@ -233,6 +242,14 @@ Chronological history of active and completed bookings with agreed pricing in �
 ---
 
 ### 2. Worker Pro Application (Port 5174)
+
+#### 🔐 Worker Pro Landing Page & Registration Gateway (`/`)
+- **Dedicated Trade Pro Gateway**: Unauthenticated visitors are presented with the **Kaam Setu Pro Trade Onboarding Gateway**.
+- **Sign In / Registration Flow**:
+  - **Trade Pro Sign In**: Instant login with email and password.
+  - **Register as Trade Specialist**: Complete registration form with Full Name, Email, Phone, Password, Primary Trade Specialization (Plumbing, Electrical, Cleaning, Appliances, Carpentry, Painting), Years of Experience, Hourly Rate in ₹, Minimum Callout Fee in ₹, and City. Creates the worker profile, verification badges, trade links, and base location in the database, immediately transitioning the worker to the Pro Dashboard.
+  - **Quick 1-Click Pro Demos**: One-click logins for Suresh Kumar (Plumber), Priya Sharma (Electrician), Rajesh Verma (Cleaning), or Anita Roy (Appliances).
+- **Logout & Session Control**: Dedicated logout button in the header and mobile drawer.
 
 #### ⚡ Worker Dashboard (`/`)
 - **Instant Availability Toggle**: Prominent button in the header and top banner allowing the worker to switch between `ONLINE` (ready for dispatch) and `OFFLINE` (unavailable).
@@ -394,6 +411,9 @@ Kaam Setu includes complete integration and security verification suites that te
 
 ```bash
 cd server
+
+# Run Customer & Worker registration, database persistence & auth verification test
+npx tsx src/tests/authRegistration.test.ts
 
 # Run 12-step complete end-to-end booking lifecycle test
 npx tsx src/tests/e2eWorkflow.test.ts

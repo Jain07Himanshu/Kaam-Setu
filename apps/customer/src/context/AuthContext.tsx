@@ -16,8 +16,9 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: { email: string; password: string }) => Promise<void>;
-  register: (payload: any) => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<any>;
+  register: (payload: any) => Promise<any>;
+  demoLogin: (identifier?: string) => Promise<any>;
   logout: () => void;
   switchDemoUser: (identifier: string) => Promise<void>;
 }
@@ -30,22 +31,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchCurrentUser = async () => {
+    const existingToken = getToken();
+    if (!existingToken) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const res = await api.getMe();
       setUser(res.user);
     } catch (err) {
-      console.warn('Failed to fetch user, logging in as demo customer...');
-      // Seamless fallback to demo customer for immediate hackathon exploration
-      try {
-        const demoRes = await api.demoLogin('aarav.customer@kaamsetu.demo');
-        setToken(demoRes.token);
-        setTokenState(demoRes.token);
-        setUser(demoRes.user);
-      } catch (demoErr) {
-        clearToken();
-        setTokenState(null);
-        setUser(null);
-      }
+      clearToken();
+      setTokenState(null);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -62,6 +61,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setToken(res.token);
       setTokenState(res.token);
       setUser(res.user);
+      return res.user;
     } finally {
       setIsLoading(false);
     }
@@ -74,6 +74,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setToken(res.token);
       setTokenState(res.token);
       setUser(res.user);
+      return res.user;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const demoLogin = async (identifier: string = 'aarav.customer@kaamsetu.demo') => {
+    setIsLoading(true);
+    try {
+      const res = await api.demoLogin(identifier);
+      setToken(res.token);
+      setTokenState(res.token);
+      setUser(res.user);
+      return res.user;
     } finally {
       setIsLoading(false);
     }
@@ -86,15 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const switchDemoUser = async (identifier: string) => {
-    setIsLoading(true);
-    try {
-      const res = await api.demoLogin(identifier);
-      setToken(res.token);
-      setTokenState(res.token);
-      setUser(res.user);
-    } finally {
-      setIsLoading(false);
-    }
+    await demoLogin(identifier);
   };
 
   return (
@@ -106,6 +112,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isLoading,
         login,
         register,
+        demoLogin,
         logout,
         switchDemoUser,
       }}

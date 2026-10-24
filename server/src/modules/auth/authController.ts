@@ -11,11 +11,19 @@ const registerSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   role: z.enum(['CUSTOMER', 'WORKER', 'ADMIN']).default('CUSTOMER'),
   phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   // Worker-specific optional fields
   serviceCategoryId: z.string().optional(),
+  experienceYears: z.number().optional().default(3),
   skills: z.array(z.string()).optional(),
   serviceRadiusKm: z.number().optional().default(15),
-  hourlyRate: z.number().optional(),
+  hourlyRate: z.number().optional().default(399),
+  baseRate: z.number().optional().default(249),
+  bio: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -37,12 +45,15 @@ export async function register(req: Request, res: Response) {
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 
+    const defaultAvatar = data.role === 'CUSTOMER' ? '/avatars/aarav.svg' : '/avatars/suresh.svg';
+
     const user = await prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         phone: data.phone,
         role: data.role,
+        avatarUrl: defaultAvatar,
         passwordHash,
         status: 'ACTIVE',
       },
@@ -63,11 +74,11 @@ export async function register(req: Request, res: Response) {
         data: {
           userId: user.id,
           label: 'Home',
-          address: '742 Evergreen Terrace',
-          city: 'Metro City',
-          postalCode: '10001',
-          latitude: 40.7128,
-          longitude: -74.006,
+          address: data.address || 'B-402, Hiranandani Gardens, Powai',
+          city: data.city || 'Mumbai',
+          postalCode: data.postalCode || '400076',
+          latitude: data.latitude || 19.1176,
+          longitude: data.longitude || 72.9060,
           isDefault: true,
         },
       });
@@ -77,7 +88,9 @@ export async function register(req: Request, res: Response) {
           userId: user.id,
           skills: JSON.stringify(data.skills || ['General Maintenance']),
           serviceRadiusKm: data.serviceRadiusKm,
-          hourlyRate: data.hourlyRate || 45,
+          hourlyRate: data.hourlyRate || 399,
+          baseRate: data.baseRate || 249,
+          bio: data.bio || `Verified professional with ${data.experienceYears || 3} years of hands-on field experience. Equipped with high-grade tools and parts.`,
           isAvailable: true,
           onboardingStatus: 'COMPLETED',
         },
@@ -88,19 +101,30 @@ export async function register(req: Request, res: Response) {
         data: [
           { workerId: workerProfile.id, type: 'PHONE', status: 'VERIFIED', notes: 'Phone verified' },
           { workerId: workerProfile.id, type: 'ID_DOCUMENT', status: 'VERIFIED', notes: 'Government ID Verified' },
-          { workerId: workerProfile.id, type: 'SKILL_CERT', status: 'VERIFIED', notes: 'Trades skill certified' },
+          { workerId: workerProfile.id, type: 'SKILL_CERT', status: 'VERIFIED', notes: 'Trade skill certified' },
         ],
       });
 
-      // Link service category if provided
+      // Link service category if provided (accepts either category ID or slug)
       if (data.serviceCategoryId) {
-        await prisma.workerService.create({
-          data: {
-            workerId: workerProfile.id,
-            serviceCategoryId: data.serviceCategoryId,
-            experienceYears: 4,
+        const cat = await prisma.serviceCategory.findFirst({
+          where: {
+            OR: [
+              { id: data.serviceCategoryId },
+              { slug: data.serviceCategoryId.toLowerCase() },
+            ],
           },
         });
+
+        if (cat) {
+          await prisma.workerService.create({
+            data: {
+              workerId: workerProfile.id,
+              serviceCategoryId: cat.id,
+              experienceYears: data.experienceYears || 3,
+            },
+          });
+        }
       }
 
       // Worker default location
@@ -108,11 +132,11 @@ export async function register(req: Request, res: Response) {
         data: {
           userId: user.id,
           label: 'Service Base',
-          address: '100 Service Blvd',
-          city: 'Metro City',
-          postalCode: '10001',
-          latitude: 40.7135,
-          longitude: -74.0055,
+          address: data.address || 'Powai Service Hub',
+          city: data.city || 'Mumbai',
+          postalCode: data.postalCode || '400076',
+          latitude: data.latitude || 19.1176,
+          longitude: data.longitude || 72.9060,
           isDefault: true,
         },
       });

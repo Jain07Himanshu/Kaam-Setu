@@ -16,10 +16,11 @@ import {
   Menu,
   X,
   CheckCircle2,
+  LogOut,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { user, isAvailable, toggleAvailability } = useAuth();
+  const { user, isAvailable, toggleAvailability, logout } = useAuth();
   const { lastEvent } = useSocket();
   const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -140,6 +141,16 @@ export const Header: React.FC = () => {
 
             {/* Demo Switcher */}
             <DemoSwitcher />
+
+            {/* Logout Button */}
+            <button
+              onClick={logout}
+              className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors flex items-center gap-1"
+              title="Log Out of Kaam Setu Pro"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="text-xs font-bold hidden xl:inline">Logout</span>
+            </button>
 
             {/* Mobile menu toggle */}
             <button

@@ -18,8 +18,9 @@ interface AuthContextType {
   isLoading: boolean;
   isAvailable: boolean;
   toggleAvailability: () => Promise<void>;
-  login: (credentials: { email: string; password: string }) => Promise<void>;
-  register: (payload: any) => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<any>;
+  register: (payload: any) => Promise<any>;
+  demoLogin: (identifier?: string) => Promise<any>;
   logout: () => void;
   switchDemoWorker: (identifier: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -34,23 +35,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isAvailable, setIsAvailable] = useState(true);
 
   const fetchCurrentUser = async () => {
+    const existingToken = getToken();
+    if (!existingToken) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const res = await api.getMe();
       setUser(res.user);
       setIsAvailable(res.user?.workerProfile?.isAvailable ?? true);
     } catch (err) {
-      console.warn('Failed to fetch worker, logging in as demo worker Suresh Kumar...');
-      try {
-        const demoRes = await api.demoLogin('suresh.plumber@kaamsetu.demo');
-        setToken(demoRes.token);
-        setTokenState(demoRes.token);
-        setUser(demoRes.user);
-        setIsAvailable(demoRes.user?.workerProfile?.isAvailable ?? true);
-      } catch (demoErr) {
-        clearToken();
-        setTokenState(null);
-        setUser(null);
-      }
+      clearToken();
+      setTokenState(null);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -83,6 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setTokenState(res.token);
       setUser(res.user);
       setIsAvailable(res.user?.workerProfile?.isAvailable ?? true);
+      return res.user;
     } finally {
       setIsLoading(false);
     }
@@ -96,6 +96,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setTokenState(res.token);
       setUser(res.user);
       setIsAvailable(true);
+      return res.user;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const demoLogin = async (identifier: string = 'suresh.plumber@kaamsetu.demo') => {
+    setIsLoading(true);
+    try {
+      const res = await api.demoLogin(identifier);
+      setToken(res.token);
+      setTokenState(res.token);
+      setUser(res.user);
+      setIsAvailable(res.user?.workerProfile?.isAvailable ?? true);
+      return res.user;
     } finally {
       setIsLoading(false);
     }
@@ -108,16 +123,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const switchDemoWorker = async (identifier: string) => {
-    setIsLoading(true);
-    try {
-      const res = await api.demoLogin(identifier);
-      setToken(res.token);
-      setTokenState(res.token);
-      setUser(res.user);
-      setIsAvailable(res.user?.workerProfile?.isAvailable ?? true);
-    } finally {
-      setIsLoading(false);
-    }
+    await demoLogin(identifier);
   };
 
   return (
@@ -131,6 +137,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         toggleAvailability,
         login,
         register,
+        demoLogin,
         logout,
         switchDemoWorker,
         refreshProfile: fetchCurrentUser,
