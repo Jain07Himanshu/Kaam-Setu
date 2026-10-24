@@ -24,7 +24,7 @@ export const JobOffersPage: React.FC = () => {
 
   // Quote Modal State
   const [quoteModalOffer, setQuoteModalOffer] = useState<any | null>(null);
-  const [proposedPrice, setProposedPrice] = useState<number>(65);
+  const [proposedPrice, setProposedPrice] = useState<number>(450);
   const [estimatedArrival, setEstimatedArrival] = useState<number>(25);
   const [scopeDescription, setScopeDescription] = useState<string>('');
   const [exclusions, setExclusions] = useState<string>('Parts and replacement hardware to be reimbursed at cost.');
@@ -56,7 +56,7 @@ export const JobOffersPage: React.FC = () => {
 
   const handleOpenQuoteModal = (offer: any) => {
     setQuoteModalOffer(offer);
-    const suggested = offer.jobRequest?.budgetMin || 60;
+    const suggested = offer.jobRequest?.budgetMin || 350;
     setProposedPrice(suggested);
     setScopeDescription(`Standard diagnostic and complete repair for: ${offer.jobRequest?.title}`);
   };
@@ -235,7 +235,7 @@ export const JobOffersPage: React.FC = () => {
                     <div className="flex items-center gap-1.5">
                       <DollarSign className="w-4 h-4 text-brand-primary" />
                       <span>
-                        Budget: {job?.isOpenToQuotes ? 'Open to Quotes' : `$${job?.budgetMin} - $${job?.budgetMax}`}
+                        Budget: {job?.isOpenToQuotes ? 'Open to Quotes' : `₹${job?.budgetMin} - ₹${job?.budgetMax}`}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -268,7 +268,7 @@ export const JobOffersPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-amber-800 flex items-center gap-1.5">
                         <MessageSquare className="w-4 h-4 text-amber-600" />
-                        <span>Customer Counteroffer Received: ${submittedQuote.proposedPrice}</span>
+                        <span>Customer Counteroffer Received: ₹{submittedQuote.proposedPrice}</span>
                       </span>
                       <button
                         onClick={() => {
@@ -288,7 +288,7 @@ export const JobOffersPage: React.FC = () => {
                   <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200 text-xs flex items-center justify-between">
                     <div>
                       <span className="font-bold text-charcoal">Your Submitted Quote: </span>
-                      <span className="font-black text-brand-primary text-sm">${submittedQuote.proposedPrice}</span>
+                      <span className="font-black text-brand-primary text-sm">₹{submittedQuote.proposedPrice}</span>
                       <span className="text-gray-400 ml-2">ETA: ~{submittedQuote.estimatedArrivalMinutes} min</span>
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white border border-gray-300">
@@ -346,7 +346,7 @@ export const JobOffersPage: React.FC = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-gray-700 uppercase mb-1">
-                    Your Proposed Price ($) *
+                    Your Proposed Price (₹) *
                   </label>
                   <input
                     type="number"
@@ -444,7 +444,7 @@ export const JobOffersPage: React.FC = () => {
             <div className="space-y-3 text-xs">
               <div>
                 <label className="block font-bold text-gray-700 uppercase mb-1">
-                  Revised Price Agreement ($)
+                  Revised Price Agreement (₹)
                 </label>
                 <input
                   type="number"

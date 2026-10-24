@@ -23,7 +23,7 @@ export const NotificationToast: React.FC = () => {
       const q = lastEvent.payload.quote;
       setToast({
         id: Date.now().toString(),
-        title: `New Quote Received: $${q.proposedPrice}`,
+        title: `New Quote Received: ₹${q.proposedPrice}`,
         message: `${q.worker?.user?.name || 'A verified worker'} sent an offer for your request.`,
         link: `/jobs/${lastEvent.payload.jobRequestId}`,
         type: 'quote',
@@ -32,7 +32,7 @@ export const NotificationToast: React.FC = () => {
       const q = lastEvent.payload.quote;
       setToast({
         id: Date.now().toString(),
-        title: `Counteroffer Received: $${q.proposedPrice}`,
+        title: `Counteroffer Received: ₹${q.proposedPrice}`,
         message: `Worker sent a counteroffer response.`,
         link: `/jobs/${q.jobRequestId}`,
         type: 'quote',
@@ -56,7 +56,7 @@ export const NotificationToast: React.FC = () => {
       setToast({
         id: Date.now().toString(),
         title: 'Booking Confirmed! 🎉',
-        message: `Agreed price: $${booking.agreedPrice}. Start Code: ${booking.startOtp}`,
+        message: `Agreed price: ₹${booking.agreedPrice}. Start Code: ${booking.startOtp}`,
         link: `/bookings/${booking.id}`,
         type: 'booking',
       });

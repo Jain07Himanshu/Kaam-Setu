@@ -8,15 +8,13 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-brand-primary flex items-center justify-center text-white">
-                <Wrench className="w-4 h-4 text-brand-cream" />
-              </div>
+              <img src="/logo.jpg" alt="Kaam Setu" className="h-10 w-auto object-contain rounded-lg" />
               <span className="font-extrabold text-lg text-charcoal">
-                Hyper<span className="text-brand-primary">Local</span>
+                Kaam<span className="text-brand-primary">Setu</span>
               </span>
             </div>
             <p className="text-xs text-gray-500 leading-relaxed">
-              Your Neighborhood. Connected. Empowering local communities with transparent, reliable on-demand household services.
+              Your Work, Our Priority. Empowering Indian neighborhoods with transparent, reliable on-demand household services.
             </p>
           </div>
 

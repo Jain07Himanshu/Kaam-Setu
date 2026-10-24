@@ -1,17 +1,17 @@
-# HyperLocal 🛠️
-> **“Your Neighborhood. Connected.”**
+# Kaam Setu 🛠️
+> **“Your Work, Our Priority”**
 
-A connected hyperlocal service platform connecting customers who need reliable household trade services with nearby skilled and unskilled workers. Built as a fully functional, database-connected application with real-time WebSockets, role-based security, a fair matching engine, transparent quotation & negotiation, and mutually verified booking execution.
+A connected hyperlocal service platform connecting customers who need reliable household trade services with nearby skilled and unskilled workers. Built as a fully functional, database-connected application with real-time WebSockets, role-based security, a fair matching engine, transparent quotation & negotiation in Indian Rupees (₹), and mutually verified booking execution.
 
 ---
 
 ## 🌟 Key Capabilities & Features
 
 ### 1. Two Distinct Connected Applications
-- **HyperLocal Customer (`apps/customer` on port 5173)**:
+- **Kaam Setu Customer (`apps/customer` on port 5173)**:
   - 8 Household trade categories (Plumbing, Electrical, Cleaning, Appliance Repair, Carpentry, Painting, AC Repair, Household).
-  - 6-Step Service Request Creation Wizard (Category, Description, Geo-Location, Urgency ASAP/Scheduled, Budget range, Review).
-  - Real-Time Quotations Feed via Socket.IO — incoming quotes appear without page refresh.
+  - 6-Step Service Request Creation Wizard (Category, Description, Geo-Location in Mumbai/Bengaluru, Urgency ASAP/Scheduled, INR Budget range, Review).
+  - Real-Time Quotations Feed via Socket.IO — incoming quotes appear without page refresh in Indian Rupees (₹).
   - Side-by-side comparison of proposed prices, arrival ETAs, scope inclusions, and verified trade badges.
   - Interactive Counteroffer & Negotiation module.
   - Live Booking & Service Tracker (`Confirmed` → `On The Way` → `Work Started` → `Completed`).
@@ -19,20 +19,20 @@ A connected hyperlocal service platform connecting customers who need reliable h
   - Verified Star Rating (1-5) and Customer Review submission.
   - Durable in-app notification center and support ticketing.
 
-- **HyperLocal Worker (`apps/worker` on port 5174)**:
+- **Kaam Setu Pro Worker (`apps/worker` on port 5174)**:
   - High-efficiency mobile & desktop trade interface.
   - **Instant Availability Switch**: One-click Online/Offline toggle with real-time indicator.
   - **Durable Job Offers Inbox**: Event-driven dispatch with transparent Match Score (e.g. 96%) and clear explanation list.
   - Offline Worker Guarantee: Unread offers remain in the database for reconnection retrieval.
-  - Formal Trade Quote submission with arrival ETA, scope, exclusions, and notes.
+  - Formal Trade Quote submission with arrival ETA, scope, exclusions, and notes in INR (₹).
   - Customer Counteroffer alerts and quick reply.
   - Service execution lifecycle controls:
     - Mark "On The Way".
     - Prompt for and verify customer's 4-digit Start OTP before billing.
     - Mark "Job Completed".
-  - **Authoritative Gross Earnings Dashboard**: Tallied directly from completed database records.
+  - **Authoritative Gross Earnings Dashboard**: Tallied directly from completed database records in Indian Rupee (₹).
   - Dispatch Radius slider (2 km to 50 km) and hourly/base rate configuration.
-  - Public Trade Profile with tiered verification badges (Phone, ID, Skill Certificate, Background Check).
+  - Public Trade Profile with authentic Indian personas and tiered verification badges (Phone, ID, Skill Certificate, Background Check).
 
 ### 2. Fair Matching Engine (`server/src/matching/matchingEngine.ts`)
 - Transparent scoring algorithm evaluating trade category specialization, active online availability, distance within worker service radius, trade verifications, and experience.
@@ -138,12 +138,12 @@ Use the **Demo Switcher** in the top navigation bar of either application to ins
 
 | Role | Name | Email | Password | Trade / Notes |
 |---|---|---|---|---|
-| **Customer** | Alex Johnson | `alex.customer@hyperlocal.demo` | `password123` | 742 Evergreen Terrace (Plumbing request ready) |
-| **Customer** | Sarah Mehta | `sarah.customer@hyperlocal.demo` | `password123` | 120 Oakridge Lane |
-| **Worker** | Suresh Kumar | `suresh.plumber@hyperlocal.demo` | `password123` | Master Plumber (10 yrs, 4.9★, 42 jobs) |
-| **Worker** | Priya Sharma | `priya.electric@hyperlocal.demo` | `password123` | Certified Electrician (7 yrs, 4.8★) |
-| **Worker** | Rajesh Verma | `rajesh.cleaning@hyperlocal.demo` | `password123` | Deep Cleaning Specialist (5 yrs, 4.9★) |
-| **Worker** | Anita Roy | `anita.appliances@hyperlocal.demo` | `password123` | Appliance & AC Technician (6 yrs, 4.7★) |
+| **Customer** | Aarav Sharma | `aarav.customer@kaamsetu.demo` | `password123` | B-402 Hiranandani Gardens, Powai Mumbai |
+| **Customer** | Pooja Patel | `pooja.customer@kaamsetu.demo` | `password123` | 120 Green Glen Layout, Bellandur Bengaluru |
+| **Worker** | Suresh Kumar | `suresh.plumber@kaamsetu.demo` | `password123` | Master Plumber (10 yrs, 4.9★, 42 jobs) |
+| **Worker** | Priya Sharma | `priya.electric@kaamsetu.demo` | `password123` | Certified Electrician (7 yrs, 4.8★) |
+| **Worker** | Rajesh Verma | `rajesh.cleaning@kaamsetu.demo` | `password123` | Deep Cleaning Specialist (5 yrs, 4.9★) |
+| **Worker** | Anita Roy | `anita.appliances@kaamsetu.demo` | `password123` | Appliance & AC Technician (6 yrs, 4.7★) |
 
 ---
 

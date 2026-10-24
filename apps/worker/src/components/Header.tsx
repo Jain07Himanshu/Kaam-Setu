@@ -60,20 +60,22 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16 gap-3">
           {/* Logo & Worker Subtitle */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-10 h-10 rounded-xl bg-brand-primary flex items-center justify-center text-white shadow-md shadow-brand-primary/20 group-hover:scale-105 transition-transform">
-              <HardHat className="w-5 h-5 text-brand-cream" />
-            </div>
+            <img
+              src="/logo.jpg"
+              alt="Kaam Setu Pro"
+              className="w-10 h-10 rounded-xl object-contain shadow-sm border border-brand-secondary/30 group-hover:scale-105 transition-transform"
+            />
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-xl tracking-tight text-charcoal">
-                  Hyper<span className="text-brand-primary">Local</span>
+                  Kaam <span className="text-brand-primary">Setu</span>
                 </span>
                 <span className="text-[10px] uppercase font-black tracking-wider px-1.5 py-0.5 rounded-full bg-brand-cream text-brand-primaryDark border border-brand-creamDark">
                   PRO
                 </span>
               </div>
               <div className="text-[11px] font-medium text-gray-500 hidden sm:block">
-                Worker Service Platform
+                Your Work, Our Priority
               </div>
             </div>
           </Link>

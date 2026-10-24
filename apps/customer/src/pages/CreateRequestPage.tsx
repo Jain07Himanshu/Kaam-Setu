@@ -46,16 +46,16 @@ export const CreateRequestPage: React.FC = () => {
     serviceCategoryId: preselectedCategory || '',
     title: '',
     description: '',
-    addressLabel: '742 Evergreen Terrace',
-    city: 'Metro City',
-    postalCode: '10001',
-    latitude: 40.7128,
-    longitude: -74.006,
+    addressLabel: 'B-402, Hiranandani Gardens, Powai',
+    city: 'Mumbai',
+    postalCode: '400076',
+    latitude: 19.1176,
+    longitude: 72.9060,
     urgency: 'ASAP' as 'ASAP' | 'SCHEDULED',
     scheduledAt: '',
     isOpenToQuotes: true,
-    budgetMin: 40,
-    budgetMax: 90,
+    budgetMin: 350,
+    budgetMax: 850,
   });
 
   useEffect(() => {
@@ -227,7 +227,7 @@ export const CreateRequestPage: React.FC = () => {
                     </div>
                     <div>
                       <div className="font-bold text-sm text-charcoal">{cat.name}</div>
-                      <div className="text-[11px] text-gray-500 mt-0.5">Est. ${cat.basePriceEstimate || 45}</div>
+                      <div className="text-[11px] text-gray-500 mt-0.5">Est. ₹{cat.basePriceEstimate || 349}</div>
                     </div>
                   </button>
                 );
@@ -477,7 +477,7 @@ export const CreateRequestPage: React.FC = () => {
                 {!formData.isOpenToQuotes && (
                   <div className="grid grid-cols-2 gap-3 pt-2">
                     <div>
-                      <label className="text-[11px] font-bold text-gray-600 uppercase">Min ($)</label>
+                      <label className="text-[11px] font-bold text-gray-600 uppercase">Min (₹)</label>
                       <input
                         type="number"
                         value={formData.budgetMin}
@@ -486,7 +486,7 @@ export const CreateRequestPage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-[11px] font-bold text-gray-600 uppercase">Max ($)</label>
+                      <label className="text-[11px] font-bold text-gray-600 uppercase">Max (₹)</label>
                       <input
                         type="number"
                         value={formData.budgetMax}
@@ -539,7 +539,7 @@ export const CreateRequestPage: React.FC = () => {
               <div className="flex justify-between">
                 <span className="text-gray-500">Budget:</span>
                 <span className="font-bold text-charcoal">
-                  {formData.isOpenToQuotes ? 'Open to worker quotes' : `$${formData.budgetMin} - $${formData.budgetMax}`}
+                  {formData.isOpenToQuotes ? 'Open to worker quotes' : `₹${formData.budgetMin} - ₹${formData.budgetMax}`}
                 </span>
               </div>
             </div>

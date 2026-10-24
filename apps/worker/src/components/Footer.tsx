@@ -7,14 +7,16 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-brand-primary flex items-center justify-center text-white">
-              <HardHat className="w-4 h-4 text-brand-cream" />
-            </div>
+            <img
+              src="/logo.jpg"
+              alt="Kaam Setu Pro"
+              className="w-7 h-7 rounded-lg object-contain border border-brand-secondary/30"
+            />
             <span className="font-extrabold text-charcoal">
-              Hyper<span className="text-brand-primary">Local</span> Pro
+              Kaam <span className="text-brand-primary">Setu</span> Pro
             </span>
             <span className="text-gray-300">|</span>
-            <span>Empowering Independent Trade Professionals</span>
+            <span>Your Work, Our Priority</span>
           </div>
 
           <div className="flex items-center gap-4 text-xs">

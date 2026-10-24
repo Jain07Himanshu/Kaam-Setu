@@ -1,6 +1,6 @@
-# HyperLocal — Central Database Design & Schema
+# Kaam Setu — Central Database Design & Schema
 
-HyperLocal uses **Prisma ORM** with a single authoritative relational database shared between both Customer and Worker applications.
+Kaam Setu uses **Prisma ORM** with a single authoritative relational database shared between both Customer and Worker applications.
 
 ---
 

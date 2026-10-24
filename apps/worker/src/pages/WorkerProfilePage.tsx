@@ -64,7 +64,7 @@ export const WorkerProfilePage: React.FC = () => {
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-gray-100 shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
           <img
-            src={user?.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250'}
+            src={user?.avatarUrl || '/avatars/suresh.svg'}
             alt={user?.name}
             className="w-20 h-20 rounded-2xl object-cover border-2 border-brand-surface shadow-sm shrink-0"
           />
@@ -91,7 +91,7 @@ export const WorkerProfilePage: React.FC = () => {
               <span>·</span>
               <span className="flex items-center gap-1">
                 <Phone className="w-3.5 h-3.5" />
-                {user?.phone || '+1 (555) 432-1098'}
+                {user?.phone || '+91 98201 12345'}
               </span>
             </div>
           </div>

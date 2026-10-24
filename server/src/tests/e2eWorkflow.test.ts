@@ -4,7 +4,7 @@ import { initializeSockets } from '../sockets/socketManager.js';
 import { prisma } from '../database/prisma.js';
 
 async function runE2ETest() {
-  console.log('🧪 Starting HyperLocal End-to-End Workflow Verification...');
+  console.log('🧪 Starting Kaam Setu End-to-End Workflow Verification...');
 
   const app = createApp();
   const server = http.createServer(app);
@@ -20,12 +20,12 @@ async function runE2ETest() {
   const BASE = 'http://localhost:5001/api';
 
   try {
-    // Step 1: Sign in as Customer Alex Johnson
+    // Step 1: Sign in as Customer Aarav Sharma
     console.log('\n--- Step 1: Customer Authentication ---');
     const custAuthRes = await fetch(`${BASE}/auth/demo-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'CUSTOMER', identifier: 'alex.customer@hyperlocal.demo' }),
+      body: JSON.stringify({ role: 'CUSTOMER', identifier: 'aarav.customer@kaamsetu.demo' }),
     });
     const custAuth = await custAuthRes.json();
     console.log(`✅ Customer signed in: ${custAuth.user.name} (Role: ${custAuth.user.role})`);
@@ -41,15 +41,15 @@ async function runE2ETest() {
       serviceCategoryId: plumbingCat.id,
       title: 'Emergency Main Drain Clog & Leak in Kitchen',
       description: 'Water is backing up into both basins when running water. Leaking slightly around the P-trap seal. Need immediate professional clearing.',
-      addressLabel: '742 Evergreen Terrace',
-      city: 'Metro City',
-      postalCode: '10001',
-      latitude: 40.7128,
-      longitude: -74.0060,
+      addressLabel: 'B-402, Hiranandani Gardens, Powai',
+      city: 'Mumbai',
+      postalCode: '400076',
+      latitude: 19.1176,
+      longitude: 72.9060,
       urgency: 'ASAP',
       isOpenToQuotes: true,
-      budgetMin: 50,
-      budgetMax: 100,
+      budgetMin: 350,
+      budgetMax: 700,
     };
 
     const createJobRes = await fetch(`${BASE}/jobs`, {
@@ -70,7 +70,7 @@ async function runE2ETest() {
     const workerAuthRes = await fetch(`${BASE}/auth/demo-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'WORKER', identifier: 'suresh.plumber@hyperlocal.demo' }),
+      body: JSON.stringify({ role: 'WORKER', identifier: 'suresh.plumber@kaamsetu.demo' }),
     });
     const workerAuth = await workerAuthRes.json();
     console.log(`✅ Worker signed in: ${workerAuth.user.name} (Role: ${workerAuth.user.role})`);
@@ -98,7 +98,7 @@ async function runE2ETest() {
       },
       body: JSON.stringify({
         jobRequestId: createdJob.id,
-        proposedPrice: 85.0,
+        proposedPrice: 550.0,
         estimatedArrivalMinutes: 20,
         scopeDescription: 'Heavy-duty motorized snake drain clearing up to 25ft and replace trap washers',
         exclusions: 'Piping replacement beyond the trap junction',
@@ -107,7 +107,7 @@ async function runE2ETest() {
     });
     const quoteData = await quoteRes.json();
     const createdQuote = quoteData.quote;
-    console.log(`✅ Quote submitted: $${createdQuote.proposedPrice} by ${createdQuote.worker?.user?.name}`);
+    console.log(`✅ Quote submitted: ₹${createdQuote.proposedPrice} by ${createdQuote.worker?.user?.name}`);
 
     // Step 6: Customer counteroffers
     console.log('\n--- Step 6: Customer Counteroffers ---');
@@ -118,12 +118,12 @@ async function runE2ETest() {
         Authorization: `Bearer ${custToken}`,
       },
       body: JSON.stringify({
-        proposedPrice: 75.0,
-        message: 'Could you do $75 since the main shutoff valve is already easily accessible?',
+        proposedPrice: 500.0,
+        message: 'Could you do ₹500 since the main shutoff valve is already easily accessible?',
       }),
     });
     const counterData = await counterRes.json();
-    console.log(`✅ Counteroffer recorded: $${counterData.quote.proposedPrice} (Status: ${counterData.quote.status})`);
+    console.log(`✅ Counteroffer recorded: ₹${counterData.quote.proposedPrice} (Status: ${counterData.quote.status})`);
 
     // Step 7: Customer Accepts Quote -> Creates single authoritative Booking
     console.log('\n--- Step 7: Customer Accepts Quote ---');
@@ -137,7 +137,7 @@ async function runE2ETest() {
     const acceptData = await acceptRes.json();
     const booking = acceptData.booking;
     console.log(`✅ Quote Accepted! Booking Created: (ID: ${booking.id})`);
-    console.log(`✅ Agreed Price: $${booking.agreedPrice}`);
+    console.log(`✅ Agreed Price: ₹${booking.agreedPrice}`);
     console.log(`✅ Generated Customer Start OTP: ${booking.startOtp}`);
 
     // Step 8: Worker updates status to ON_THE_WAY
@@ -216,7 +216,7 @@ async function runE2ETest() {
       headers: { Authorization: `Bearer ${workerToken}` },
     });
     const earningsData = await earningsRes.json();
-    console.log(`✅ Worker Recorded Gross Earnings: $${earningsData.summary.totalGrossEarnings}`);
+    console.log(`✅ Worker Recorded Gross Earnings: ₹${earningsData.summary.totalGrossEarnings}`);
     console.log(`✅ Completed Jobs Count: ${earningsData.summary.completedCount}`);
 
     console.log('\n=============================================================');

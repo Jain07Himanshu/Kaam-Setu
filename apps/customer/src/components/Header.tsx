@@ -48,20 +48,22 @@ export const Header: React.FC = () => {
         <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo & Tagline */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-            <div className="w-10 h-10 rounded-xl bg-brand-primary flex items-center justify-center text-white shadow-md shadow-brand-primary/20 group-hover:scale-105 transition-transform">
-              <Wrench className="w-5 h-5 text-brand-cream" />
-            </div>
+            <img
+              src="/logo.jpg"
+              alt="Kaam Setu"
+              className="h-11 w-auto object-contain rounded-lg shadow-xs group-hover:scale-105 transition-transform"
+            />
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-xl tracking-tight text-charcoal">
-                  Hyper<span className="text-brand-primary">Local</span>
+                  Kaam<span className="text-brand-primary">Setu</span>
                 </span>
                 <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-brand-surface text-brand-primaryDark border border-brand-secondary/30">
                   Customer
                 </span>
               </div>
               <div className="text-[11px] font-medium text-gray-500 hidden sm:block">
-                Your Neighborhood. Connected.
+                Your Work, Our Priority
               </div>
             </div>
           </Link>
@@ -69,9 +71,9 @@ export const Header: React.FC = () => {
           {/* Neighborhood Location Pill */}
           <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200/80 text-xs text-gray-600">
             <MapPin className="w-3.5 h-3.5 text-brand-primary shrink-0" />
-            <span className="font-medium text-gray-800">Metro City, NY 10001</span>
+            <span className="font-medium text-gray-800">Powai, Mumbai 400076</span>
             <span className="text-gray-400">·</span>
-            <span className="text-brand-primary font-semibold">Downtown Hub</span>
+            <span className="text-brand-primary font-semibold">Central Hub</span>
           </div>
 
           {/* Desktop Navigation */}

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <rect width="100" height="100" rx="20" fill="#EBF7E7"/>
+  <!-- Head & Skin -->
+  <circle cx="50" cy="46" r="22" fill="#D29868"/>
+  <!-- Hair & Cap -->
+  <path d="M28 42 C28 26, 72 26, 72 42 Z" fill="#231F20"/>
+  <rect x="24" y="32" width="52" height="10" rx="4" fill="#2A7C13"/>
+  <ellipse cx="50" cy="32" rx="22" ry="7" fill="#1E5B0E"/>
+  <!-- Eyes -->
+  <circle cx="42" cy="44" r="2.5" fill="#231F20"/>
+  <circle cx="58" cy="44" r="2.5" fill="#231F20"/>
+  <!-- Mustache -->
+  <path d="M38 53 Q50 56 62 53 Q58 58 50 56 Q42 58 38 53 Z" fill="#1C1819"/>
+  <!-- Smile -->
+  <path d="M44 59 Q50 63 56 59" stroke="#231F20" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Clothes / Uniform -->
+  <path d="M22 88 C25 68, 75 68, 78 88 L78 100 L22 100 Z" fill="#2A7C13"/>
+  <polygon points="50,70 44,82 56,82" fill="#FFF8CF"/>
+</svg>

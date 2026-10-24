@@ -1,4 +1,4 @@
-# HyperLocal — Shared Backend API Reference
+# Kaam Setu — Shared Backend API Reference
 
 **Base URL:** `http://localhost:5000/api`
 

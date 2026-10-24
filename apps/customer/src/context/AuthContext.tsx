@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.warn('Failed to fetch user, logging in as demo customer...');
       // Seamless fallback to demo customer for immediate hackathon exploration
       try {
-        const demoRes = await api.demoLogin('alex.customer@hyperlocal.demo');
+        const demoRes = await api.demoLogin('aarav.customer@kaamsetu.demo');
         setToken(demoRes.token);
         setTokenState(demoRes.token);
         setUser(demoRes.user);

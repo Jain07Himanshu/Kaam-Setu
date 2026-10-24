@@ -1,8 +1,8 @@
-# HyperLocal — Real-Time Events & Notifications
+# Kaam Setu — Real-Time Events & Notifications
 
 ## 1. Socket.IO Event Architecture
 
-HyperLocal uses **Socket.IO** for real-time bidirectional communication between the central server and connected clients.
+Kaam Setu uses **Socket.IO** for real-time bidirectional communication between the central server and connected clients.
 
 ### Connection & Authentication:
 - Handshake carries the JWT token via `socket.handshake.auth.token` or `socket.handshake.query.token`.

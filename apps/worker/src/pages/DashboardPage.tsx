@@ -61,7 +61,7 @@ export const DashboardPage: React.FC = () => {
           <img
             src={
               user?.avatarUrl ||
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250'
+              '/avatars/suresh.svg'
             }
             alt={user?.name}
             className="w-16 h-16 rounded-2xl object-cover border-2 border-brand-surface shadow-sm shrink-0"
@@ -74,7 +74,7 @@ export const DashboardPage: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
-              Service Base: Metro City Central Hub · Trade Pro Account
+              Service Base: Mumbai Central Hub · Trade Pro Account
             </p>
           </div>
         </div>
@@ -144,7 +144,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="text-2xl font-black text-brand-primary">
-            ${earningsSummary?.totalGrossEarnings ?? 0}
+            ₹{earningsSummary?.totalGrossEarnings ?? 0}
           </div>
           <p className="text-[11px] text-gray-500">Authoritative job records</p>
         </div>
@@ -168,7 +168,7 @@ export const DashboardPage: React.FC = () => {
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white text-brand-primaryDark border border-brand-secondary/30">
                       {b.status.replace(/_/g, ' ')}
                     </span>
-                    <span className="text-xs font-bold text-brand-primary">Agreed Price: ${b.agreedPrice}</span>
+                    <span className="text-xs font-bold text-brand-primary">Agreed Price: ₹{b.agreedPrice}</span>
                   </div>
                   <h3 className="font-bold text-base text-charcoal mt-0.5">{b.jobRequest?.title}</h3>
                   <p className="text-xs text-gray-600">
@@ -246,7 +246,7 @@ export const DashboardPage: React.FC = () => {
                       </span>
                       <span>·</span>
                       <span className="font-semibold text-charcoal">
-                        Budget: {job?.isOpenToQuotes ? 'Open to Quotes' : `$${job?.budgetMin} - $${job?.budgetMax}`}
+                        Budget: {job?.isOpenToQuotes ? 'Open to Quotes' : `₹${job?.budgetMin} - ₹${job?.budgetMax}`}
                       </span>
                     </div>
                   </div>

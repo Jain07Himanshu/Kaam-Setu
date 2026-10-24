@@ -91,7 +91,7 @@ export const HomePage: React.FC = () => {
                 {activeBooking.jobRequest?.title || 'Active Service Booking'}
               </h3>
               <p className="text-xs text-gray-600">
-                Assigned Pro: <span className="font-semibold text-charcoal">{activeBooking.worker?.user?.name}</span> · Agreed: ${activeBooking.agreedPrice}
+                Assigned Pro: <span className="font-semibold text-charcoal">{activeBooking.worker?.user?.name}</span> · Agreed: ₹{activeBooking.agreedPrice}
               </p>
             </div>
           </div>
@@ -193,7 +193,7 @@ export const HomePage: React.FC = () => {
 
                 <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-gray-400">
-                    Est. from <span className="text-brand-primaryDark font-bold">${cat.basePriceEstimate || 40}</span>
+                    Est. from <span className="text-brand-primaryDark font-bold">₹{cat.basePriceEstimate || 299}</span>
                   </span>
                   <div className="w-7 h-7 rounded-lg bg-gray-50 group-hover:bg-brand-primary group-hover:text-white flex items-center justify-center text-gray-400 transition-colors">
                     <ArrowRight className="w-3.5 h-3.5" />

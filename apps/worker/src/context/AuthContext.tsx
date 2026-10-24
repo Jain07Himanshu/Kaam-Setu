@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       console.warn('Failed to fetch worker, logging in as demo worker Suresh Kumar...');
       try {
-        const demoRes = await api.demoLogin('suresh.plumber@hyperlocal.demo');
+        const demoRes = await api.demoLogin('suresh.plumber@kaamsetu.demo');
         setToken(demoRes.token);
         setTokenState(demoRes.token);
         setUser(demoRes.user);

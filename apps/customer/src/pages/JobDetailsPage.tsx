@@ -200,7 +200,7 @@ export const JobDetailsPage: React.FC = () => {
                 Booking Confirmed
               </div>
               <h4 className="text-sm font-bold text-charcoal">
-                Assigned Pro: {job.booking.worker?.user?.name} · Agreed Price: ${job.booking.agreedPrice}
+                Assigned Pro: {job.booking.worker?.user?.name} · Agreed Price: ₹{job.booking.agreedPrice}
               </h4>
             </div>
           </div>
@@ -251,7 +251,7 @@ export const JobDetailsPage: React.FC = () => {
           <div className="flex items-center gap-1.5">
             <DollarSign className="w-4 h-4 text-brand-primary" />
             <span>
-              {job.isOpenToQuotes ? 'Open to Quotes' : `$${job.budgetMin} - $${job.budgetMax}`}
+              {job.isOpenToQuotes ? 'Open to Quotes' : `₹${job.budgetMin} - ₹${job.budgetMax}`}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -321,7 +321,7 @@ export const JobDetailsPage: React.FC = () => {
                         <img
                           src={
                             workerUser?.avatarUrl ||
-                            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250'
+                            '/avatars/suresh.svg'
                           }
                           alt={workerUser?.name}
                           className="w-12 h-12 rounded-2xl object-cover border border-gray-200 shrink-0"
@@ -346,7 +346,7 @@ export const JobDetailsPage: React.FC = () => {
                       </div>
 
                       <div className="text-right">
-                        <div className="text-2xl font-black text-brand-primary">${quote.proposedPrice}</div>
+                        <div className="text-2xl font-black text-brand-primary">₹{quote.proposedPrice}</div>
                         <div className="text-[11px] font-semibold text-gray-500 flex items-center justify-end gap-1">
                           <Clock className="w-3 h-3 text-gray-400" />
                           <span>ETA: ~{quote.estimatedArrivalMinutes} min</span>
@@ -385,7 +385,7 @@ export const JobDetailsPage: React.FC = () => {
                             <span>
                               <strong>{n.senderRole}:</strong> "{n.message}"
                             </span>
-                            <span className="font-bold text-brand-primary">${n.proposedPrice}</span>
+                            <span className="font-bold text-brand-primary">₹{n.proposedPrice}</span>
                           </div>
                         ))}
                       </div>
@@ -413,7 +413,7 @@ export const JobDetailsPage: React.FC = () => {
                           type="button"
                           onClick={() => {
                             setCounterModalQuote(quote);
-                            setCounterPrice(Math.max(10, quote.proposedPrice - 10));
+                            setCounterPrice(Math.max(50, quote.proposedPrice - 50));
                           }}
                           className="px-3.5 py-2 rounded-xl border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold transition-colors flex items-center gap-1"
                         >
@@ -435,7 +435,7 @@ export const JobDetailsPage: React.FC = () => {
                           className="flex-1 py-2 rounded-xl bg-brand-primary hover:bg-brand-primaryDark text-white text-xs font-bold shadow-md shadow-brand-primary/20 transition-all flex items-center justify-center gap-1"
                         >
                           <CheckCircle className="w-4 h-4 text-brand-cream" />
-                          <span>Accept & Book (${quote.proposedPrice})</span>
+                          <span>Accept & Book (₹{quote.proposedPrice})</span>
                         </button>
                       </>
                     )}
@@ -462,13 +462,13 @@ export const JobDetailsPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-gray-500">
-              Negotiating with <strong>{counterModalQuote.worker?.user?.name}</strong>. Current quote is ${counterModalQuote.proposedPrice}.
+              Negotiating with <strong>{counterModalQuote.worker?.user?.name}</strong>. Current quote is ₹{counterModalQuote.proposedPrice}.
             </p>
 
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
-                  Your Proposed Price ($)
+                  Your Proposed Price (₹)
                 </label>
                 <input
                   type="number"
@@ -484,7 +484,7 @@ export const JobDetailsPage: React.FC = () => {
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="e.g. Can we agree on $65 if I have already purchased the replacement part?"
+                  placeholder="e.g. Can we agree on ₹350 if I have already purchased the replacement part?"
                   value={counterMessage}
                   onChange={(e) => setCounterMessage(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-xs focus:border-brand-primary outline-none"

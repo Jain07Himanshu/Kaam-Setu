@@ -16,8 +16,8 @@ export const AvailabilityPage: React.FC = () => {
   const workerProfile = user?.workerProfile;
 
   const [serviceRadiusKm, setServiceRadiusKm] = useState<number>(workerProfile?.serviceRadiusKm || 15);
-  const [hourlyRate, setHourlyRate] = useState<number>(workerProfile?.hourlyRate || 50);
-  const [baseRate, setBaseRate] = useState<number>(workerProfile?.baseRate || 35);
+  const [hourlyRate, setHourlyRate] = useState<number>(workerProfile?.hourlyRate || 399);
+  const [baseRate, setBaseRate] = useState<number>(workerProfile?.baseRate || 249);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -121,7 +121,7 @@ export const AvailabilityPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase mb-1.5">
-                Preferred Hourly Rate ($)
+                Preferred Hourly Rate (₹)
               </label>
               <div className="relative">
                 <DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
@@ -136,7 +136,7 @@ export const AvailabilityPage: React.FC = () => {
 
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase mb-1.5">
-                Base Visit / Callout Fee ($)
+                Base Visit / Callout Fee (₹)
               </label>
               <div className="relative">
                 <DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />

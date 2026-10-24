@@ -107,7 +107,7 @@ export const BookingsListPage: React.FC = () => {
 
                 <div className="flex items-center gap-4 shrink-0">
                   <div className="text-right">
-                    <div className="text-base font-black text-brand-primary">${b.agreedPrice}</div>
+                    <div className="text-base font-black text-brand-primary">₹{b.agreedPrice}</div>
                     {isActive && (
                       <div className="text-[11px] font-semibold text-brand-primaryDark">
                         Start Code: <strong className="tracking-wider">{b.startOtp}</strong>

@@ -157,7 +157,7 @@ export const WorkerBookingsPage: React.FC = () => {
 
                   <div className="text-right">
                     <div className="text-xs text-gray-400 font-semibold">Agreed Price</div>
-                    <div className="text-xl font-black text-brand-primary">${booking.agreedPrice}</div>
+                    <div className="text-xl font-black text-brand-primary">₹{booking.agreedPrice}</div>
                   </div>
                 </div>
 
@@ -178,7 +178,7 @@ export const WorkerBookingsPage: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Phone className="w-4 h-4 text-brand-primary" />
-                      <span>Customer: {customerUser?.name} ({customerUser?.phone || '+1 555-234-5678'})</span>
+                      <span>Customer: {customerUser?.name} ({customerUser?.phone || '+91 98201 12345'})</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-brand-primary" />
@@ -275,7 +275,7 @@ export const WorkerBookingsPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-gray-600 leading-relaxed">
-              Ask the customer for their 4-digit verification code shown on their HyperLocal screen to safely begin work.
+              Ask the customer for their 4-digit verification code shown on their Kaam Setu screen to safely begin work.
             </p>
 
             {otpError && (

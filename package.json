@@ -8,7 +8,6 @@
     "server"
   ],
   "scripts": {
-    "build:packages": "npm --workspace=@hyperlocal/design-tokens run build && npm --workspace=@hyperlocal/shared-types run build",
     "prisma:generate": "npm --workspace=@hyperlocal/server run prisma:generate",
     "prisma:push": "npm --workspace=@hyperlocal/server run prisma:push",
     "prisma:seed": "npm --workspace=@hyperlocal/server run prisma:seed",
@@ -19,7 +18,7 @@
     "build:server": "npm --workspace=@hyperlocal/server run build",
     "build:customer": "npm --workspace=@hyperlocal/customer-app run build",
     "build:worker": "npm --workspace=@hyperlocal/worker-app run build",
-    "build": "npm run build:packages && npm run build:server && npm run build:customer && npm run build:worker"
+    "build": "npm run build:server && npm run build:customer && npm run build:worker"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -48,7 +48,7 @@ export const EarningsPage: React.FC = () => {
             <span>Total Gross Earnings</span>
             <DollarSign className="w-5 h-5 text-brand-primary" />
           </div>
-          <div className="text-3xl font-black text-brand-primaryDark">${summary.totalGrossEarnings}</div>
+          <div className="text-3xl font-black text-brand-primaryDark">₹{summary.totalGrossEarnings}</div>
           <p className="text-[11px] text-gray-500">100% of agreed quotes retained</p>
         </div>
 
@@ -66,7 +66,7 @@ export const EarningsPage: React.FC = () => {
             <span>Average Job Payout</span>
             <TrendingUp className="w-5 h-5 text-emerald-500" />
           </div>
-          <div className="text-3xl font-black text-charcoal">${summary.averageJobValue}</div>
+          <div className="text-3xl font-black text-charcoal">₹{summary.averageJobValue}</div>
           <p className="text-[11px] text-gray-500">Average ticket across completed trades</p>
         </div>
       </div>
@@ -111,7 +111,7 @@ export const EarningsPage: React.FC = () => {
                   </div>
 
                   <div className="text-right shrink-0">
-                    <div className="text-lg font-black text-brand-primary">+${b.agreedPrice}</div>
+                    <div className="text-lg font-black text-brand-primary">+₹{b.agreedPrice}</div>
                     <div className="text-[10px] font-semibold text-emerald-600 flex items-center justify-end gap-1">
                       <CheckCircle2 className="w-3 h-3" />
                       <span>Verified</span>

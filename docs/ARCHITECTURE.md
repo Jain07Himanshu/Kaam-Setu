@@ -1,13 +1,13 @@
-# HyperLocal — System Architecture
+# Kaam Setu — System Architecture
 
-**Tagline:** “Your Neighborhood. Connected.”
+**Tagline:** “Your Work, Our Priority”
 
 ## 1. High-Level Overview
 
-HyperLocal is designed as a connected monorepo containing two distinct user applications served by a single shared backend and authoritative central database:
+Kaam Setu is designed as a connected monorepo containing two distinct user applications served by a single shared backend and authoritative central database:
 
-1. **HyperLocal Customer (`apps/customer`)** — Dedicated client application running on `http://localhost:5173` for homeowners and residents requesting household services.
-2. **HyperLocal Worker (`apps/worker`)** — Dedicated client application running on `http://localhost:5174` for verified local trade pros receiving real-time job offers, submitting quotes, and managing job execution.
+1. **Kaam Setu Customer (`apps/customer`)** — Dedicated client application running on `http://localhost:5173` for homeowners and residents requesting household services.
+2. **Kaam Setu Pro Worker (`apps/worker`)** — Dedicated client application running on `http://localhost:5174` for verified local trade pros receiving real-time job offers, submitting quotes, and managing job execution.
 3. **Shared Backend (`server`)** — Express + TypeScript + Socket.IO API server running on `http://localhost:5000`.
 4. **Authoritative Relational Database** — SQLite default for local zero-dependency development (`prisma/dev.db`) and PostgreSQL configuration for production deployment (`prisma/schema.postgresql.prisma`).
 5. **Shared Packages (`packages/*`)** — Shared design tokens and shared TypeScript contracts between backend and frontends.
@@ -18,7 +18,7 @@ HyperLocal is designed as a connected monorepo containing two distinct user appl
 
 ```
 +-------------------------------------------------------------------------+
-|                              HYPERLOCAL                                 |
+|                                KAAM SETU                                |
 +------------------------------------+------------------------------------+
 |  apps/customer (Port 5173)         |  apps/worker (Port 5174)           |
 |  - Service Request Wizard          |  - Instant Job Offer Receiving     |

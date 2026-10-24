@@ -7,10 +7,10 @@ export const DemoSwitcher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const demoWorkers = [
-    { name: 'Suresh Kumar', email: 'suresh.plumber@hyperlocal.demo', trade: 'Master Plumber (10 yrs)' },
-    { name: 'Priya Sharma', email: 'priya.electric@hyperlocal.demo', trade: 'Certified Electrician (7 yrs)' },
-    { name: 'Rajesh Verma', email: 'rajesh.cleaning@hyperlocal.demo', trade: 'Deep Cleaning Specialist' },
-    { name: 'Anita Roy', email: 'anita.appliances@hyperlocal.demo', trade: 'Appliance & AC Tech' },
+    { name: 'Suresh Kumar', email: 'suresh.plumber@kaamsetu.demo', trade: 'Master Plumber (10 yrs)' },
+    { name: 'Priya Sharma', email: 'priya.electric@kaamsetu.demo', trade: 'Certified Electrician (7 yrs)' },
+    { name: 'Rajesh Verma', email: 'rajesh.cleaning@kaamsetu.demo', trade: 'Deep Cleaning Specialist' },
+    { name: 'Anita Roy', email: 'anita.appliances@kaamsetu.demo', trade: 'Appliance & AC Tech' },
   ];
 
   return (
@@ -67,7 +67,7 @@ export const DemoSwitcher: React.FC = () => {
               rel="noreferrer"
               className="flex items-center justify-between p-2 rounded-lg bg-brand-surface hover:bg-brand-surface/80 border border-brand-secondary/30 text-xs font-semibold text-brand-primaryDark transition-colors"
             >
-              <span>Open Customer App (Port 5173)</span>
+              <span>Open Kaam Setu Customer App</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>

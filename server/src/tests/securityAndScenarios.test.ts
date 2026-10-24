@@ -23,21 +23,21 @@ async function runSecurityAndScenariosTest() {
     const custRes = await fetch(`${BASE}/auth/demo-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'CUSTOMER', identifier: 'alex.customer@hyperlocal.demo' }),
+      body: JSON.stringify({ role: 'CUSTOMER', identifier: 'aarav.customer@kaamsetu.demo' }),
     });
     const { token: custToken } = await custRes.json();
 
     const worker1Res = await fetch(`${BASE}/auth/demo-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'WORKER', identifier: 'suresh.plumber@hyperlocal.demo' }),
+      body: JSON.stringify({ role: 'WORKER', identifier: 'suresh.plumber@kaamsetu.demo' }),
     });
     const { token: worker1Token } = await worker1Res.json();
 
     const worker2Res = await fetch(`${BASE}/auth/demo-login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'WORKER', identifier: 'priya.electric@hyperlocal.demo' }),
+      body: JSON.stringify({ role: 'WORKER', identifier: 'priya.electric@kaamsetu.demo' }),
     });
     const { token: worker2Token } = await worker2Res.json();
 
@@ -89,11 +89,11 @@ async function runSecurityAndScenariosTest() {
         serviceCategoryId: elecCat.id,
         title: 'Install Dedicated 240V Outlet for Workshop',
         description: 'Need a dedicated 240V 30A circuit run from the breaker panel to the garage wall.',
-        addressLabel: '742 Evergreen Terrace',
-        city: 'Metro City',
-        postalCode: '10001',
-        latitude: 40.7128,
-        longitude: -74.0060,
+        addressLabel: 'B-402, Hiranandani Gardens, Powai',
+        city: 'Mumbai',
+        postalCode: '400076',
+        latitude: 19.1176,
+        longitude: 72.9060,
         urgency: 'SCHEDULED',
         isOpenToQuotes: true,
       }),
@@ -109,13 +109,13 @@ async function runSecurityAndScenariosTest() {
       },
       body: JSON.stringify({
         jobRequestId: multiJob.id,
-        proposedPrice: 180.0,
+        proposedPrice: 850.0,
         estimatedArrivalMinutes: 45,
         scopeDescription: 'Run 8/2 Romex cable, install 30A double-pole breaker, and NEMA 6-30 receptacle.',
       }),
     });
     const { quote: q1 } = await q1Res.json();
-    console.log(`✅ Worker 1 (Priya) submitted quote: $${q1.proposedPrice}`);
+    console.log(`✅ Worker 1 (Priya) submitted quote: ₹${q1.proposedPrice}`);
 
     // Customer accepts Priya's quote
     const acceptQ1Res = await fetch(`${BASE}/quotes/${q1.id}/accept`, {
@@ -152,11 +152,11 @@ async function runSecurityAndScenariosTest() {
         serviceCategoryId: elecCat.id,
         title: 'Outdoor Porch Light Flicker',
         description: 'Single fixture flicker on the front steps.',
-        addressLabel: '742 Evergreen Terrace',
-        city: 'Metro City',
-        postalCode: '10001',
-        latitude: 40.7128,
-        longitude: -74.0060,
+        addressLabel: 'B-402, Hiranandani Gardens, Powai',
+        city: 'Mumbai',
+        postalCode: '400076',
+        latitude: 19.1176,
+        longitude: 72.9060,
         urgency: 'ASAP',
       }),
     });

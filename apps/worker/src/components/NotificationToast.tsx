@@ -33,7 +33,7 @@ export const NotificationToast: React.FC = () => {
       setToast({
         id: Date.now().toString(),
         title: 'Customer Counteroffer Received! 💬',
-        message: `Counter proposed at $${q.proposedPrice}. Review & reply in Job Offers.`,
+        message: `Counter proposed at ₹${q.proposedPrice}. Review & reply in Job Offers.`,
         link: '/offers',
         type: 'counter',
       });

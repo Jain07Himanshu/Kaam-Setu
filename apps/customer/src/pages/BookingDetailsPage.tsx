@@ -143,7 +143,7 @@ export const BookingDetailsPage: React.FC = () => {
 
         <div className="text-right">
           <div className="text-xs text-gray-400 font-semibold">Agreed Price</div>
-          <div className="text-2xl font-black text-brand-primary">${booking.agreedPrice}</div>
+          <div className="text-2xl font-black text-brand-primary">₹{booking.agreedPrice}</div>
         </div>
       </div>
 
@@ -213,7 +213,7 @@ export const BookingDetailsPage: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <img
-              src={workerUser?.avatarUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250'}
+              src={workerUser?.avatarUrl || '/avatars/suresh.svg'}
               alt={workerUser?.name}
               className="w-14 h-14 rounded-2xl object-cover border border-gray-200"
             />
@@ -232,7 +232,7 @@ export const BookingDetailsPage: React.FC = () => {
           <div className="space-y-2 pt-2 border-t border-gray-100 text-xs text-gray-600">
             <div className="flex items-center gap-2">
               <Phone className="w-4 h-4 text-brand-primary" />
-              <span className="font-semibold text-charcoal">{workerUser?.phone || '+1 (555) 432-1098'}</span>
+              <span className="font-semibold text-charcoal">{workerUser?.phone || '+91 98201 12345'}</span>
             </div>
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-brand-primary" />

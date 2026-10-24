@@ -228,7 +228,7 @@ export async function getEarnings(req: AuthenticatedRequest, res: Response) {
         totalGrossEarnings,
         completedCount,
         averageJobValue,
-        currency: 'USD',
+        currency: 'INR',
       },
       completedBookings,
     });

@@ -7,8 +7,8 @@ export const DemoSwitcher: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const demoCustomers = [
-    { name: 'Alex Johnson', email: 'alex.customer@hyperlocal.demo', address: '742 Evergreen Terrace (Plumbing request ready)' },
-    { name: 'Sarah Mehta', email: 'sarah.customer@hyperlocal.demo', address: '120 Oakridge Lane, Apt 4B' },
+    { name: 'Aarav Sharma', email: 'aarav.customer@kaamsetu.demo', address: 'B-402, Hiranandani Gardens, Powai, Mumbai' },
+    { name: 'Pooja Patel', email: 'pooja.customer@kaamsetu.demo', address: '120 Green Glen Layout, Bellandur, Bengaluru' },
   ];
 
   return (
@@ -65,7 +65,7 @@ export const DemoSwitcher: React.FC = () => {
               rel="noreferrer"
               className="flex items-center justify-between p-2 rounded-lg bg-brand-cream/60 hover:bg-brand-cream border border-brand-creamDark text-xs font-semibold text-brand-primaryDark transition-colors"
             >
-              <span>Open HyperLocal Worker App</span>
+              <span>Open Kaam Setu Pro Worker App</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>

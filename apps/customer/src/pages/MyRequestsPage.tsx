@@ -109,7 +109,7 @@ export const MyRequestsPage: React.FC = () => {
                     {isBooked ? (
                       <div className="text-[11px] font-semibold text-brand-primaryDark flex items-center gap-1 justify-end">
                         <CheckCircle className="w-3 h-3 text-brand-primary" />
-                        <span>Booked (${req.booking?.agreedPrice})</span>
+                        <span>Booked (₹{req.booking?.agreedPrice})</span>
                       </div>
                     ) : (
                       <div className="text-[11px] text-gray-400">

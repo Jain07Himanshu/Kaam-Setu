@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <rect width="100" height="100" rx="20" fill="#FFF8CF"/>
+  <!-- Head & Skin -->
+  <circle cx="50" cy="46" r="22" fill="#C98A58"/>
+  <!-- Modern Hair Style -->
+  <path d="M28 40 C28 22, 70 20, 72 38 C68 28, 54 24, 42 26 C34 28, 30 32, 28 40 Z" fill="#1C1819"/>
+  <!-- Eyes -->
+  <circle cx="43" cy="45" r="2.5" fill="#231F20"/>
+  <circle cx="57" cy="45" r="2.5" fill="#231F20"/>
+  <!-- Trimmed light beard & smile -->
+  <path d="M38 48 C38 64, 62 64, 62 48 C62 60, 38 60, 38 48 Z" fill="#231F20" opacity="0.3"/>
+  <path d="M44 55 Q50 60 56 55" stroke="#231F20" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Casual Polo Shirt -->
+  <path d="M22 88 C25 68, 75 68, 78 88 L78 100 L22 100 Z" fill="#1E5B0E"/>
+  <polygon points="50,68 45,78 55,78" fill="#FFFDF0"/>
+</svg>

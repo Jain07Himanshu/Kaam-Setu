@@ -237,14 +237,23 @@ export async function demoLogin(req: Request, res: Response) {
   try {
     const { role, identifier } = req.body; // e.g. role: 'CUSTOMER' or 'WORKER'
 
+    const emailMap: Record<string, string> = {
+      'alex.customer@hyperlocal.demo': 'aarav.customer@kaamsetu.demo',
+      'sarah.customer@hyperlocal.demo': 'pooja.customer@kaamsetu.demo',
+      'suresh.plumber@hyperlocal.demo': 'suresh.plumber@kaamsetu.demo',
+      'priya.electric@hyperlocal.demo': 'priya.electric@kaamsetu.demo',
+      'rajesh.cleaning@hyperlocal.demo': 'rajesh.cleaning@kaamsetu.demo',
+      'anita.appliances@hyperlocal.demo': 'anita.appliances@kaamsetu.demo',
+    };
+
     let targetEmail: string;
 
     if (identifier) {
-      targetEmail = identifier;
+      targetEmail = emailMap[identifier] || identifier;
     } else if (role === 'WORKER') {
-      targetEmail = 'suresh.plumber@hyperlocal.demo';
+      targetEmail = 'suresh.plumber@kaamsetu.demo';
     } else {
-      targetEmail = 'alex.customer@hyperlocal.demo';
+      targetEmail = 'aarav.customer@kaamsetu.demo';
     }
 
     const user = await prisma.user.findFirst({

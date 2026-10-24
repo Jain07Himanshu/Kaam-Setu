@@ -1,6 +1,6 @@
-# HyperLocal — Local Setup & Development Guide
+# Kaam Setu — Local Setup & Development Guide
 
-Follow these steps to run HyperLocal locally on your machine.
+Follow these steps to run Kaam Setu locally on your machine.
 
 ---
 
@@ -64,14 +64,14 @@ npm run dev
 Use the **Demo Switcher** pill located in the header of both applications for instant 1-click switching without typing passwords:
 
 ### Customers:
-1. **Alex Johnson** — `alex.customer@hyperlocal.demo` / `password123`
-2. **Sarah Mehta** — `sarah.customer@hyperlocal.demo` / `password123`
+1. **Aarav Sharma** — `aarav.customer@kaamsetu.demo` / `password123`
+2. **Pooja Patel** — `pooja.customer@kaamsetu.demo` / `password123`
 
 ### Verified Trade Workers:
-1. **Suresh Kumar** (Master Plumber, 10+ yrs) — `suresh.plumber@hyperlocal.demo` / `password123`
-2. **Priya Sharma** (Certified Electrician, 7+ yrs) — `priya.electric@hyperlocal.demo` / `password123`
-3. **Rajesh Verma** (Deep Cleaning Specialist) — `rajesh.cleaning@hyperlocal.demo` / `password123`
-4. **Anita Roy** (Appliance & AC Tech) — `anita.appliances@hyperlocal.demo` / `password123`
+1. **Suresh Kumar** (Master Plumber, 10+ yrs) — `suresh.plumber@kaamsetu.demo` / `password123`
+2. **Priya Sharma** (Certified Electrician, 7+ yrs) — `priya.electric@kaamsetu.demo` / `password123`
+3. **Rajesh Verma** (Deep Cleaning Specialist) — `rajesh.cleaning@kaamsetu.demo` / `password123`
+4. **Anita Roy** (Appliance & AC Tech) — `anita.appliances@kaamsetu.demo` / `password123`
 
 ---
 

@@ -51,7 +51,7 @@ export const api = {
       body: JSON.stringify(payload),
     }),
 
-  demoLogin: (identifier: string = 'alex.customer@hyperlocal.demo') =>
+  demoLogin: (identifier: string = 'aarav.customer@kaamsetu.demo') =>
     request<{ token: string; user: any }>('/auth/demo-login', {
       method: 'POST',
       body: JSON.stringify({ role: 'CUSTOMER', identifier }),
