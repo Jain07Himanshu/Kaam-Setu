@@ -1,173 +1,472 @@
 # Kaam Setu 🛠️
 > **“Your Work, Our Priority”**
 
-A connected hyperlocal service platform connecting customers who need reliable household trade services with nearby skilled and unskilled workers. Built as a fully functional, database-connected application with real-time WebSockets, role-based security, a fair matching engine, transparent quotation & negotiation in Indian Rupees (₹), and mutually verified booking execution.
+A production-grade, connected hyperlocal service platform connecting customers who need reliable household trade services with nearby skilled and unskilled workers. Built as a fully functional, database-connected application with real-time WebSockets, role-based security, a fair matching engine, transparent quotation & negotiation in Indian Rupees (₹), and mutually verified booking execution.
 
 ---
 
-## 🌟 Key Capabilities & Features
-
-### 1. Two Distinct Connected Applications
-- **Kaam Setu Customer (`apps/customer` on port 5173)**:
-  - 8 Household trade categories (Plumbing, Electrical, Cleaning, Appliance Repair, Carpentry, Painting, AC Repair, Household).
-  - 6-Step Service Request Creation Wizard (Category, Description, Geo-Location in Mumbai/Bengaluru, Urgency ASAP/Scheduled, INR Budget range, Review).
-  - Real-Time Quotations Feed via Socket.IO — incoming quotes appear without page refresh in Indian Rupees (₹).
-  - Side-by-side comparison of proposed prices, arrival ETAs, scope inclusions, and verified trade badges.
-  - Interactive Counteroffer & Negotiation module.
-  - Live Booking & Service Tracker (`Confirmed` → `On The Way` → `Work Started` → `Completed`).
-  - **Mutually Verified Start Code**: 4-digit start OTP displayed to customer, required by worker to commence work safely.
-  - Verified Star Rating (1-5) and Customer Review submission.
-  - Durable in-app notification center and support ticketing.
-
-- **Kaam Setu Pro Worker (`apps/worker` on port 5174)**:
-  - High-efficiency mobile & desktop trade interface.
-  - **Instant Availability Switch**: One-click Online/Offline toggle with real-time indicator.
-  - **Durable Job Offers Inbox**: Event-driven dispatch with transparent Match Score (e.g. 96%) and clear explanation list.
-  - Offline Worker Guarantee: Unread offers remain in the database for reconnection retrieval.
-  - Formal Trade Quote submission with arrival ETA, scope, exclusions, and notes in INR (₹).
-  - Customer Counteroffer alerts and quick reply.
-  - Service execution lifecycle controls:
-    - Mark "On The Way".
-    - Prompt for and verify customer's 4-digit Start OTP before billing.
-    - Mark "Job Completed".
-  - **Authoritative Gross Earnings Dashboard**: Tallied directly from completed database records in Indian Rupee (₹).
-  - Dispatch Radius slider (2 km to 50 km) and hourly/base rate configuration.
-  - Public Trade Profile with authentic Indian personas and tiered verification badges (Phone, ID, Skill Certificate, Background Check).
-
-### 2. Fair Matching Engine (`server/src/matching/matchingEngine.ts`)
-- Transparent scoring algorithm evaluating trade category specialization, active online availability, distance within worker service radius, trade verifications, and experience.
-- Neutral, penalty-free baseline for new providers to ensure fair opportunities without ratings bias.
-- Provides readable matching reasons displayed directly in the worker inbox.
-
-### 3. Mutual Safety & Access Protection
-- Protected customer address: full street address is kept hidden until a quote is accepted.
-- Atomic quote acceptance: database transaction marks accepted quote `ACCEPTED` and rejects competing quotes to eliminate double-booking conflicts.
-- Mutually verified start OTP: protects against premature billing.
+## 📑 Table of Contents
+1. [Overview & Core Value Proposition](#-overview--core-value-proposition)
+2. [Technology Stack](#-technology-stack)
+3. [System Architecture](#-system-architecture)
+4. [Monorepo Directory Structure](#-monorepo-directory-structure)
+5. [Complete Web Pages & User Journeys](#-complete-web-pages--user-journeys)
+   - [Customer Application (`apps/customer`)](#1-customer-application-port-5173)
+   - [Worker Pro Application (`apps/worker`)](#2-worker-pro-application-port-5174)
+   - [Shared Backend Engines (`server`)](#3-shared-backend-engines-port-5000)
+6. [How to Run on Another PC (Step-by-Step Setup)](#-how-to-run-on-another-pc-step-by-step-setup)
+   - [System Prerequisites](#1-system-prerequisites)
+   - [Cloning & Installation](#2-cloning--installation)
+   - [Zero-Config Database Initialization](#3-zero-config-database-initialization)
+   - [Launching All Services](#4-launching-all-services)
+   - [Port Reference](#5-port-reference)
+7. [Pre-Configured Demo Accounts](#-pre-configured-demo-accounts)
+8. [Automated Verification & Security Test Suites](#-automated-verification--security-test-suites)
+9. [Configuration & Environment Variables](#-configuration--environment-variables)
+10. [Switching to PostgreSQL in Production](#-switching-to-postgresql-in-production)
 
 ---
 
-## 🎨 Brand Identity & Design System
+## 💡 Overview & Core Value Proposition
 
-The application is styled with the exact design system colors:
-- **Primary Green:** `#2A7C13` (buttons, active navigation, key status accents)
-- **Secondary Green:** `#76C457` (progress indicators, subtle highlights)
-- **Soft Cream:** `#FFF8CF` (warm card accents, highlight banners)
-- **Warm Beige:** `#FBE6C2` (supporting cards, demo switcher pill)
-- **Charcoal:** `#1F2937` (high-contrast readable typography)
-- **Surface:** `#FDFBF7` / `#FFFFFF` (clean, calm, modern card surfaces)
+Most home services platforms either act as lead-generation brokers (charging high commissions and hiding worker earnings) or static directory listings where customers have to make dozens of phone calls.
+
+**Kaam Setu** solves this with an authentic, connected hyperlocal marketplace:
+- **Instant Fair Matching**: Customers post a job, and the backend engine matches nearby eligible trade pros based on skills, location, availability, and background checks.
+- **Transparent Quotes & Counteroffers**: Workers submit itemized trade quotes with arrival ETAs, scope inclusions, and exclusions in Indian Rupees (₹). Customers can accept or counteroffer in real-time.
+- **Zero Double-Bookings**: Atomic database transactions guarantee that accepting one quote instantly rejects competing bids and prevents scheduling conflicts.
+- **Mutually Verified Start Code**: Every booking generates a secure 4-digit start OTP provided exclusively to the customer. Workers cannot commence work or bill until the customer verifies the OTP upon arrival.
+- **Direct & Authoritative Earnings**: Workers keep 100% of their quoted price, with earnings tracked directly from verified database records.
 
 ---
 
-## 🏗️ Monorepo Architecture
+## 🛠️ Technology Stack
+
+| Layer | Technologies Used |
+|---|---|
+| **Customer Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons, Socket.IO Client |
+| **Worker Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons, Socket.IO Client |
+| **Shared Backend** | Node.js, Express.js, TypeScript, Socket.IO Server |
+| **Database & ORM** | Prisma ORM, SQLite (local zero-dependency default), PostgreSQL (production-ready) |
+| **Authentication** | JSON Web Tokens (JWT), bcrypt password hashing, Role-Based Access Control (RBAC) |
+| **Validation** | TypeScript type safety & schema validation |
+| **Testing** | Node.js TSX integration test runner, HTTP assertions, concurrent transaction tests |
+
+---
+
+## 🏛️ System Architecture
 
 ```
-hyperlocal/
++-------------------------------------------------------------------------------------------------+
+|                                           KAAM SETU                                             |
++-----------------------------------------------+-------------------------------------------------+
+|  Customer Portal (Port 5173)                  |  Worker Pro Portal (Port 5174)                  |
+|  - 8 Trade Categories Discovery               |  - Online / Offline Instant Availability Toggle |
+|  - 6-Step Service Request Wizard              |  - Real-Time Matched Job Offers Inbox           |
+|  - Real-Time Quotes Feed via WebSockets       |  - Transparent Matching Reason Breakdown        |
+|  - Live Counteroffer & Price Negotiation (₹)  |  - Itemized Trade Quote Submission (₹ & ETA)    |
+|  - Confirmed Booking & Arrival Timeline       |  - 4-Digit Customer Start Code Verification     |
+|  - 4-Digit Customer Start OTP Display         |  - Work Execution Lifecycle (En Route -> Done)  |
+|  - 5-Star Rating & Verified Feedback          |  - Authoritative Gross Earnings & History (₹)   |
+|  - In-App Notifications & Support Center      |  - Dispatch Radius (2-50km) & Rate Settings     |
++-----------------------------------------------+-------------------------------------------------+
+                        \                                              /
+                         \           REST API & WebSockets            /
+                          \          (Bearer JWT Authentication)     /
+                           v                                        v
++-------------------------------------------------------------------------------------------------+
+|                               SHARED BACKEND SERVER (Port 5000)                                 |
+|                                                                                                 |
+|  [ Auth & RBAC Guard ]  [ Fair Matching Engine ]  [ Atomic Booking Tx ]  [ Socket Room Manager ]|
++-------------------------------------------------------------------------------------------------+
+                                                |
+                                        Prisma ORM Client
+                                                |
+                                                v
++-------------------------------------------------------------------------------------------------+
+|                                     AUTHORITATIVE DATABASE                                      |
+|  Users · CustomerProfiles · WorkerProfiles · JobRequests · JobOffers · Quotes · Bookings ·      |
+|  QuoteNegotiations · Reviews · Notifications · SupportTickets                                  |
++-------------------------------------------------------------------------------------------------+
+```
+
+---
+
+## 📂 Monorepo Directory Structure
+
+```
+KaamSetu/
 ├── apps/
-│   ├── customer/            # React + TypeScript + Vite + Tailwind (Port 5173)
-│   └── worker/              # React + TypeScript + Vite + Tailwind (Port 5174)
-├── server/
+│   ├── customer/                      # Kaam Setu Customer Web Application
+│   │   ├── public/
+│   │   │   ├── avatars/               # Authentic Indian SVG avatars (Aarav, Pooja, etc.)
+│   │   │   └── logo.jpg               # Official Kaam Setu brand mark
+│   │   ├── src/
+│   │   │   ├── components/            # Header, Footer, DemoSwitcher, Toast
+│   │   │   ├── context/               # AuthContext, SocketContext
+│   │   │   ├── pages/                 # Home, Request, JobDetails, Bookings, etc.
+│   │   │   ├── services/              # API client and backend fetchers
+│   │   │   └── styles/                # Tailwind CSS configurations
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   │
+│   └── worker/                        # Kaam Setu Pro Worker Web Application
+│       ├── public/
+│       │   ├── avatars/               # Authentic Indian SVG avatars (Suresh, Priya, etc.)
+│       │   └── logo.jpg               # Official Kaam Setu brand mark
+│       ├── src/
+│       │   ├── components/            # Header, Footer, DemoSwitcher, Toast
+│       │   ├── context/               # AuthContext, SocketContext
+│       │   ├── pages/                 # Dashboard, Offers, Bookings, Earnings, etc.
+│       │   ├── services/              # Worker API client and dispatch listeners
+│       │   └── styles/                # Tailwind CSS configurations
+│       ├── index.html
+│       ├── package.json
+│       └── vite.config.ts
+│
+├── server/                            # Shared Backend API & WebSocket Server
 │   ├── src/
-│   │   ├── app.ts           # Express application & route configuration
-│   │   ├── server.ts        # HTTP Server + Socket.IO initialization
-│   │   ├── matching/        # Fair Matching Engine
-│   │   ├── sockets/         # Socket.IO room manager & event broadcaster
-│   │   ├── middleware/      # JWT Authentication & Role-Based Access Guard
-│   │   └── modules/         # Auth, Jobs, Offers, Quotes, Bookings, Workers, Reviews
+│   │   ├── config/                    # Environment variables & constants
+│   │   ├── database/                  # Prisma client instance
+│   │   ├── middleware/                # JWT auth guard, error handler, RBAC
+│   │   ├── matching/                  # Fair Matching Engine algorithm
+│   │   ├── sockets/                   # Socket.IO room manager & live emitter
+│   │   ├── modules/
+│   │   │   ├── auth/                  # Register, login, demo switcher endpoints
+│   │   │   ├── jobs/                  # Job request creation & cancellation
+│   │   │   ├── quotes/                # Quote submission, counteroffers, acceptance
+│   │   │   ├── bookings/              # Status tracking & start OTP verification
+│   │   │   ├── workers/               # Offers inbox, profile & earnings summary
+│   │   │   ├── reviews/               # 5-star customer review submission
+│   │   │   └── support/               # Ticketing and dispute resolution
+│   │   ├── tests/
+│   │   │   ├── e2eWorkflow.test.ts    # 12-step end-to-end booking flow test
+│   │   │   └── securityAndScenarios.test.ts # RBAC and conflict rejection tests
+│   │   ├── app.ts                     # Express application definition
+│   │   └── server.ts                  # Server entrypoint with HTTP & Socket.IO
 │   ├── prisma/
-│   │   ├── schema.prisma    # SQLite schema (default zero-dependency local)
-│   │   ├── schema.postgresql.prisma # PostgreSQL schema (production drop-in)
-│   │   └── seed.ts          # Idempotent realistic seed data
-│   └── tests/
-│       ├── e2eWorkflow.test.ts          # 12-step end-to-end booking flow test
-│       └── securityAndScenarios.test.ts # Security, double-booking, and cancellation
+│   │   ├── schema.prisma              # SQLite schema (default zero-config)
+│   │   ├── schema.postgresql.prisma   # PostgreSQL schema (production drop-in)
+│   │   └── seed.ts                    # Realistic Indian seed data in INR (₹)
+│   ├── package.json
+│   └── tsconfig.json
+│
 ├── packages/
-│   ├── shared-types/        # Common TypeScript interfaces & socket event contracts
-│   └── design-tokens/       # Color palette, spacing, radii, and shadows
-└── docs/
-    ├── ARCHITECTURE.md      # Architecture diagrams & component breakdown
-    ├── DATABASE.md          # ER diagram & PostgreSQL migration guide
-    ├── API.md               # Complete REST API reference
-    ├── NOTIFICATIONS.md     # Real-time WebSocket event contracts
-    └── SETUP.md             # Step-by-step developer setup
+│   ├── design-tokens/                 # Brand colors, spacing, borders, shadows
+│   └── shared-types/                  # Shared TypeScript interfaces & Socket events
+│
+├── docs/                              # Comprehensive architectural documentation
+│   ├── ARCHITECTURE.md                # System topology and sequence diagrams
+│   ├── DATABASE.md                    # Relational data models and PostgreSQL guide
+│   ├── API.md                         # Complete REST API reference
+│   ├── NOTIFICATIONS.md               # Real-time WebSocket event contracts
+│   └── SETUP.md                       # Quick developer setup guide
+│
+├── package.json                       # Root monorepo script coordinator
+└── README.md
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🖥️ Complete Web Pages & User Journeys
 
-### 1. Install Dependencies
+### 1. Customer Application (Port 5173)
+
+#### 🏠 Home Page (`/`)
+- **Brand Navigation Header**: Displays the official Kaam Setu logo, location indicator (e.g. *Powai, Mumbai 400076*), unread notifications bell, and the instant **Demo Switcher**.
+- **Active Service Tracking Banner**: Automatically appears when a booking is in progress, showing the assigned pro's name, agreed price in ₹, service status, and the 4-digit start OTP.
+- **Service Search & 8 Core Trade Categories**:
+  - Plumbing (Est. ₹349)
+  - Electrical Work (Est. ₹299)
+  - Home Cleaning (Est. ₹499)
+  - Appliance Repair (Est. ₹449)
+  - Carpentry (Est. ₹399)
+  - Painting (Est. ₹999)
+  - AC Repair & Service (Est. ₹599)
+  - Cooking & Household Help (Est. ₹349)
+- **Recent Requests**: Quick cards for previously posted jobs with live quote counters.
+- **Trust Badges**: Explanations of mutual start OTP verification, transparent negotiation, and zero hidden broker fees.
+
+#### 📝 Service Request Creation Wizard (`/request`)
+A guided 6-step wizard designed for quick, clear request creation:
+1. **Step 1 — Category**: Select trade specialization.
+2. **Step 2 — Details**: Input request title and detailed description of the problem.
+3. **Step 3 — Location**: Provide street address, neighborhood (e.g. Mumbai, Bengaluru), postal code, and geo-coordinates. Exact address is kept private until a quote is accepted.
+4. **Step 4 — Timing & Urgency**: Choose between *Immediate Dispatch (ASAP)* or *Scheduled for Later* with date/time picker.
+5. **Step 5 — Budget**: Choose between *Open to Competitive Quotes* or specify an expected budget range in Indian Rupees (`₹ Min - ₹ Max`).
+6. **Step 6 — Review & Submit**: Comprehensive review card before dispatching into the central Fair Matching Engine.
+
+#### 📊 Live Job Request & Quotes Feed (`/jobs/:id`)
+- **Live WebSocket Feed**: Real-time Socket.IO connection updates quotes instantly without refreshing the page.
+- **Detailed Quote Cards**:
+  - Worker name, verified trade badge, and authentic Indian portrait avatar.
+  - Rating average (e.g. 4.9★) and completed job count.
+  - Quoted price in Indian Rupees (`₹`).
+  - Arrival ETA (e.g. `~20 mins`).
+  - Included scope of work and clearly listed exclusions.
+- **Interactive Actions**:
+  - **Accept & Book**: Triggers an atomic transaction confirming the booking and rejecting competing bids.
+  - **Counteroffer Modal**: Propose a revised price in ₹ and write a scope note.
+  - **Reject**: Dismiss an unsuitable quote.
+
+#### 🚗 Confirmed Booking & Arrival Tracker (`/bookings/:id`)
+- **Service Progress Timeline**: Visual progression through 4 milestone steps:
+  1. `Confirmed` — Booking accepted and worker notified.
+  2. `On The Way` — Worker is en route to your address.
+  3. `Work Started` — 4-digit OTP verified upon arrival; work in progress.
+  4. `Completed` — Job finished.
+- **Mutually Verified Start OTP**: Prominently displays the 4-digit security code. The worker cannot commence billing without entering this exact code.
+- **Assigned Technician Card**: Phone number, verified badges, and trade specialization.
+- **5-Star Review Form**: Upon job completion, allows customer to submit a star rating (1-5) and written feedback that updates the worker's authoritative rating.
+
+#### 📋 My Requests List (`/my-requests`)
+Overview of all open, quoted, and booked requests with status badges.
+
+#### 📅 My Bookings List (`/bookings`)
+Chronological history of active and completed bookings with agreed pricing in ₹.
+
+#### 🔔 Notifications & Support (`/notifications`, `/support`)
+- Live alerts for newly received quotes, counteroffers, and status changes.
+- Direct support ticket submission for customer assistance and safety.
+
+---
+
+### 2. Worker Pro Application (Port 5174)
+
+#### ⚡ Worker Dashboard (`/`)
+- **Instant Availability Toggle**: Prominent button in the header and top banner allowing the worker to switch between `ONLINE` (ready for dispatch) and `OFFLINE` (unavailable).
+- **Key Metrics Tiles**:
+  - *New Offers*: Count of unread opportunities matching their trade.
+  - *Active Jobs*: Current bookings in progress.
+  - *Completed Jobs*: Total verified completed jobs.
+  - *Total Gross Earnings*: Direct tally of lifetime earnings in Indian Rupee (`₹`).
+- **Active Booking Highlight**: Quick access to manage execution of any active job.
+- **Urgent Job Opportunities Preview**: Top matched requests nearby.
+
+#### 📥 Job Opportunities Inbox (`/offers`)
+- **Persistent Inbox**: Stores matched requests in the database so workers who were offline can review them upon reconnecting.
+- **Transparent Match Score**: Shows matching percentage (e.g. `100% Match`) along with transparent reasons:
+  - *✓ Specializes in trade category*
+  - *✓ Located within service radius (e.g. 0.2 km)*
+  - *✓ Currently active and online*
+  - *✓ Verified credentials (Phone, ID, Trade License)*
+- **Submit Quote Modal**:
+  - Proposed price in Indian Rupees (`₹`).
+  - Estimated arrival time in minutes.
+  - Scope of work included.
+  - Exclusions / extra parts policy.
+  - Personal note to customer.
+- **Counteroffer Response Modal**: Review customer's proposed price and submit a revised counter-response.
+- **Decline**: Allows workers to pass on jobs they cannot take.
+
+#### 🔨 Job Management & Execution (`/bookings`)
+- Step-by-step execution controls for confirmed bookings:
+  1. Click **"Mark On The Way"** when departing.
+  2. Click **"Enter Start Code"** upon arrival — opens modal prompting for the customer's 4-digit OTP. The server validates the code and transitions status to `WORK_STARTED`.
+  3. Click **"Mark Job Completed"** when work is finished — updates status to `COMPLETED` and credits earnings to the worker's record.
+
+#### 💰 Authoritative Earnings Dashboard (`/earnings`)
+- **Gross Earnings KPI**: Accurate sum calculated directly from `COMPLETED` booking records in the central database.
+- **Average Ticket Value**: Computed average per completed job.
+- **Itemized Work History**: Complete ledger of every completed job with customer name, completion date, and payout amount in `+₹`.
+
+#### 📍 Availability & Coverage Settings (`/availability`)
+- Interactive **Service Radius Slider**: Adjust travel coverage from `2 km` to `50 km`.
+- **Preferred Hourly Rate**: Set hourly expectation in `₹`.
+- **Base Visit / Callout Fee**: Set standard diagnostic fee in `₹`.
+
+#### 👤 Worker Trade Profile (`/profile`)
+- Displays verified credentials and badges:
+  - Phone Number Verified
+  - Government ID Document Verified
+  - Trade Skill Certification Verified
+  - Background Check Cleared
+- Completed job counter and verified rating score.
+- Editable professional bio.
+
+---
+
+### 3. Shared Backend Engines (Port 5000)
+
+1. **Fair Matching Engine (`server/src/matching/matchingEngine.ts`)**:
+   - Calculates a multi-factor score: Trade specialization (40 pts), Active online status (25 pts), Proximity within radius (20 pts), Verified credentials (10 pts), Experience (5 pts).
+   - Grants new providers a neutral baseline score to guarantee fair distribution of opportunities without rating bias.
+2. **Atomic Booking Transaction Manager (`server/src/modules/quotes/quotesController.ts`)**:
+   - Uses `prisma.$transaction()` to atomically mark the selected quote as `ACCEPTED`, create the authoritative `Booking` record with an auto-generated 4-digit OTP, mark the `JobRequest` as `BOOKED`, and reject all competing quotes.
+3. **Real-Time Socket.IO Broadcaster (`server/src/sockets/socketManager.ts`)**:
+   - Authenticates connections via JWT and organizes clients into private rooms (`user:id`, `job:id`, `booking:id`).
+   - Dispatches instant events: `job.offer.created`, `quote.created`, `quote.counteroffered`, `quote.accepted`, `booking.status.updated`.
+
+---
+
+## 💻 How to Run on Another PC (Step-by-Step Setup)
+
+Follow these exact steps to run Kaam Setu on any teammate's machine or a fresh PC:
+
+### 1. System Prerequisites
+Ensure the target machine has:
+- **Node.js**: v18.0.0 or higher (v20+ recommended). Check with `node -v`.
+- **npm**: v9.0.0 or higher. Check with `npm -v`.
+- **Git**: Installed and available in terminal. Check with `git --version`.
+- Compatible with **Windows**, **macOS**, and **Linux**.
+
+### 2. Cloning & Installation
+Open a terminal and run:
 ```bash
+# Clone the repository
+git clone https://github.com/Jain07Himanshu/KaamSetu.git
+
+# Enter project root
+cd KaamSetu
+
+# Install all monorepo dependencies across root, server, apps, and packages
 npm install
 ```
 
-### 2. Setup Database & Seed Data
+### 3. Zero-Config Database Initialization
+Kaam Setu comes pre-configured with SQLite for zero-dependency local development. No PostgreSQL server installation is required out-of-the-box:
 ```bash
+# Generate Prisma client, push database schema, and seed demo accounts
 npm run db:setup
 ```
-*Creates `dev.db`, pushes Prisma schema, and loads demo categories, customers, and workers.*
+*This command runs:*
+- `prisma generate` (generates type-safe database client)
+- `prisma db push` (creates `server/prisma/dev.db` with all tables)
+- `prisma seed` (loads 8 trade categories, demo Indian customers, verified workers, and sample completed bookings)
 
-### 3. Run the Applications
+### 4. Launching All Services
 
-#### Option A: Run services individually
-- **Terminal 1 (Backend API & Socket.IO):**
-  ```bash
-  cd server
-  npm run dev
-  ```
-- **Terminal 2 (Customer App):**
-  ```bash
-  cd apps/customer
-  npm run dev
-  ```
-- **Terminal 3 (Worker App):**
-  ```bash
-  cd apps/worker
-  npm run dev
-  ```
+Open three separate terminal windows in the project directory:
 
-#### Option B: Access Ports
-- **Customer App:** [http://localhost:5173](http://localhost:5173)
-- **Worker App:** [http://localhost:5174](http://localhost:5174)
-- **Backend API:** [http://localhost:5000/api](http://localhost:5000/api)
+#### Terminal 1 — Shared Backend API & WebSocket Server
+```bash
+cd server
+npm run dev
+```
+*Server will start on `http://localhost:5000` with API at `/api` and Socket.IO active.*
+
+#### Terminal 2 — Kaam Setu Customer Application
+```bash
+cd apps/customer
+npm run dev
+```
+*Customer application opens on `http://localhost:5173`.*
+
+#### Terminal 3 — Kaam Setu Pro Worker Application
+```bash
+cd apps/worker
+npm run dev
+```
+*Worker application opens on `http://localhost:5174`.*
+
+---
+
+### 5. Port Reference
+
+| Service | Port / URL | Purpose |
+|---|---|---|
+| **Customer App** | [http://localhost:5173](http://localhost:5173) | Service discovery, request wizard, live quotes, booking tracker |
+| **Worker App** | [http://localhost:5174](http://localhost:5174) | Availability toggle, job inbox, quotation, execution, earnings |
+| **Backend API** | [http://localhost:5000/api](http://localhost:5000/api) | Authoritative REST API endpoints |
+| **WebSocket** | `ws://localhost:5000` | Bidirectional real-time Socket.IO channel |
 
 ---
 
 ## 👥 Pre-Configured Demo Accounts
 
-Use the **Demo Switcher** in the top navigation bar of either application to instantly switch accounts without entering passwords:
+Use the **Demo Switcher** pill in the navigation header of either application to switch accounts with one click, or log in manually with the following credentials:
 
-| Role | Name | Email | Password | Trade / Notes |
+| Portal | Name | Email | Password | Role / Details |
 |---|---|---|---|---|
-| **Customer** | Aarav Sharma | `aarav.customer@kaamsetu.demo` | `password123` | B-402 Hiranandani Gardens, Powai Mumbai |
-| **Customer** | Pooja Patel | `pooja.customer@kaamsetu.demo` | `password123` | 120 Green Glen Layout, Bellandur Bengaluru |
-| **Worker** | Suresh Kumar | `suresh.plumber@kaamsetu.demo` | `password123` | Master Plumber (10 yrs, 4.9★, 42 jobs) |
-| **Worker** | Priya Sharma | `priya.electric@kaamsetu.demo` | `password123` | Certified Electrician (7 yrs, 4.8★) |
-| **Worker** | Rajesh Verma | `rajesh.cleaning@kaamsetu.demo` | `password123` | Deep Cleaning Specialist (5 yrs, 4.9★) |
-| **Worker** | Anita Roy | `anita.appliances@kaamsetu.demo` | `password123` | Appliance & AC Technician (6 yrs, 4.7★) |
+| **Customer** | Aarav Sharma | `aarav.customer@kaamsetu.demo` | `password123` | B-402 Hiranandani Gardens, Powai, Mumbai |
+| **Customer** | Pooja Patel | `pooja.customer@kaamsetu.demo` | `password123` | 120 Green Glen Layout, Bellandur, Bengaluru |
+| **Worker** | Suresh Kumar | `suresh.plumber@kaamsetu.demo` | `password123` | Master Plumber (10 yrs exp, 4.9★, Mumbai) |
+| **Worker** | Priya Sharma | `priya.electric@kaamsetu.demo` | `password123` | Certified Electrician (7 yrs exp, 4.8★) |
+| **Worker** | Rajesh Verma | `rajesh.cleaning@kaamsetu.demo` | `password123` | Deep Cleaning Specialist (5 yrs exp, 4.9★) |
+| **Worker** | Anita Roy | `anita.appliances@kaamsetu.demo` | `password123` | Appliance & AC Tech (6 yrs exp, 4.7★) |
 
 ---
 
-## 🧪 Automated End-to-End & Security Tests
+## 🧪 Automated Verification & Security Test Suites
 
-Run the comprehensive test suites to verify that business logic, security constraints, and database transactions pass 100%:
+Kaam Setu includes complete integration and security verification suites that test all business rules and atomic transactions:
 
 ```bash
 cd server
+
+# Run 12-step complete end-to-end booking lifecycle test
 npx tsx src/tests/e2eWorkflow.test.ts
+
+# Run security access controls, double-booking rejection & cancellation test
 npx tsx src/tests/securityAndScenarios.test.ts
 ```
 
-### Test Coverage Highlights:
+### Test Assertions Verified:
 - ✅ Customer registration & JWT authentication
-- ✅ Service request creation with geo-coordinates
+- ✅ Service request creation with Mumbai geo-coordinates
 - ✅ Fair Matching Engine scoring & persisted offer dispatch
-- ✅ Worker quote submission & real-time notification
-- ✅ Customer counteroffer & worker response
+- ✅ Worker quote submission in INR (₹) & real-time notification
+- ✅ Customer counteroffer & worker counter-response
 - ✅ Atomic quote acceptance & competing quote rejection
-- ✅ Mutually verified start OTP security validation
+- ✅ Mutually verified 4-digit start OTP validation (rejects invalid codes, accepts correct code)
 - ✅ Status progression: `CONFIRMED` → `ON_THE_WAY` → `WORK_STARTED` → `COMPLETED`
 - ✅ 5-star customer review & authoritative rating recalculation
 - ✅ Authoritative gross earnings calculation from completed jobs
-- ✅ Role-based authorization: Customers cannot access worker endpoints and vice-versa
-- ✅ Conflicting quote acceptance prevention
+- ✅ Role-based authorization: Customers blocked from worker endpoints (403) and vice-versa
+- ✅ Double-acceptance prevented: Conflicting acceptances rejected with 400
 - ✅ Job cancellation workflows
+
+---
+
+## ⚙️ Configuration & Environment Variables
+
+### Backend (`server/.env`):
+```env
+PORT=5000
+NODE_ENV=development
+DATABASE_URL="file:./dev.db"
+JWT_SECRET="kaam-setu-secure-jwt-secret-key-2026"
+JWT_EXPIRES_IN="7d"
+CORS_ORIGIN="http://localhost:5173,http://localhost:5174"
+```
+
+### Customer App (`apps/customer/.env`):
+```env
+VITE_API_URL="http://localhost:5000/api"
+VITE_SOCKET_URL="http://localhost:5000"
+```
+
+### Worker App (`apps/worker/.env`):
+```env
+VITE_API_URL="http://localhost:5000/api"
+VITE_SOCKET_URL="http://localhost:5000"
+```
+
+---
+
+## 🐘 Switching to PostgreSQL in Production
+
+For production deployment with a managed PostgreSQL instance:
+
+1. Replace `DATABASE_URL` in `server/.env`:
+   ```env
+   DATABASE_URL="postgresql://username:password@db-host:5432/kaamsetu?schema=public"
+   ```
+2. Swap the schema provider in `server/prisma/schema.prisma` from `sqlite` to `postgresql`, or copy `server/prisma/schema.postgresql.prisma`:
+   ```prisma
+   datasource db {
+     provider = "postgresql"
+     url      = env("DATABASE_URL")
+   }
+   ```
+3. Run migrations and re-seed:
+   ```bash
+   npx prisma migrate deploy
+   npm run prisma:seed
+   ```
+
+---
+
+## 📄 License
+This project was developed for the Hackathon. Licensed under the [MIT License](LICENSE).
