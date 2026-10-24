@@ -300,9 +300,9 @@ Chronological history of active and completed bookings with agreed pricing in �
 
 ---
 
-## 💻 How to Run on Another PC (Step-by-Step Setup)
+## 💻 How to Run on Your PC (Step-by-Step Setup)
 
-Follow these exact steps to run Kaam Setu on any teammate's machine or a fresh PC:
+Follow these exact steps to run Kaam Setu on your machine or a fresh PC:
 
 ### 1. System Prerequisites
 Ensure the target machine has:
