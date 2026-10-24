@@ -468,5 +468,12 @@ For production deployment with a managed PostgreSQL instance:
 
 ---
 
-## 📄 License
-This project was developed for the Hackathon. Licensed under the [MIT License](LICENSE).
+## 📄 License & Hackathon Details
+- **Hackathon**: VecanVerse Hackathon
+- **Team Name**: VadaPav Variables
+- **Team Members**:
+  - Himanshu B. Jain
+  - Rishikesh R. Deherkar
+  - Paran Das
+  - Pabitra Das
+- **License**: Licensed under the [MIT License](LICENSE).
