@@ -24,6 +24,7 @@ A production-grade, connected hyperlocal service platform connecting customers w
 8. [Automated Verification & Security Test Suites](#-automated-verification--security-test-suites)
 9. [Configuration & Environment Variables](#-configuration--environment-variables)
 10. [Switching to PostgreSQL in Production](#-switching-to-postgresql-in-production)
+11. [Deploying on Render](#-deploying-on-render)
 
 ---
 
@@ -485,6 +486,15 @@ For production deployment with a managed PostgreSQL instance:
    npx prisma migrate deploy
    npm run prisma:seed
    ```
+
+---
+
+## 🚀 Deploying on Render
+
+Kaam Setu is fully configured for deployment on [Render](https://render.com) using either the 1-click Blueprint (`render.yaml`) or the Render Web UI.
+
+Detailed step-by-step instructions with environment variable references are available in:
+👉 [**docs/RENDER_DEPLOYMENT.md**](docs/RENDER_DEPLOYMENT.md)
 
 ---
 

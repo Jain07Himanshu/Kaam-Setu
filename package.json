@@ -15,7 +15,7 @@
     "dev:server": "npm --workspace=@hyperlocal/server run dev",
     "dev:customer": "npm --workspace=@hyperlocal/customer-app run dev",
     "dev:worker": "npm --workspace=@hyperlocal/worker-app run dev",
-    "dev": "concurrently -n \"SERVER,CUSTOMER,WORKER\" -c \"blue,green,magenta\" \"npm run dev:server\" \"npm run dev:customer\" \"npm run dev:worker\",
+    "dev": "concurrently -n \"SERVER,CUSTOMER,WORKER\" -c \"blue,green,magenta\" \"npm run dev:server\" \"npm run dev:customer\" \"npm run dev:worker\"",
     "build:server": "npm --workspace=@hyperlocal/server run build",
     "build:customer": "npm --workspace=@hyperlocal/customer-app run build",
     "build:worker": "npm --workspace=@hyperlocal/worker-app run build",

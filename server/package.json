@@ -1,14 +1,16 @@
 {
   "name": "@hyperlocal/server",
   "version": "1.0.0",
+  "type": "module",
   "main": "src/server.ts",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "prisma generate && tsc",
+    "build": "node scripts/prepare-prisma.js && prisma generate && tsc",
     "start": "node dist/server.js",
-    "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "deploy:prod": "node scripts/prepare-prisma.js && prisma db push --skip-generate && tsx prisma/seed.ts && node dist/server.js",
+    "prisma:generate": "node scripts/prepare-prisma.js && prisma generate",
+    "prisma:push": "node scripts/prepare-prisma.js && prisma db push",
+    "prisma:seed": "node scripts/prepare-prisma.js && tsx prisma/seed.ts"
   },
   "dependencies": {
     "@hyperlocal/design-tokens": "file:../packages/design-tokens",

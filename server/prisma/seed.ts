@@ -6,6 +6,16 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting Kaam Setu Database Seeding...');
 
+  // Check if categories are already present to avoid wiping live production data
+  const existingCategoriesCount = await prisma.serviceCategory.count();
+  const forceSeed = process.env.FORCE_SEED === 'true';
+
+  if (existingCategoriesCount > 0 && !forceSeed) {
+    console.log('⚡ Database already contains seeded categories. Skipping wipe to preserve live user registrations and bookings.');
+    console.log('💡 Tip: Set FORCE_SEED=true if you wish to reset and re-seed all demo records.');
+    return;
+  }
+
   // 1. Clean existing records for clean idempotent seed
   await prisma.review.deleteMany({});
   await prisma.quoteNegotiation.deleteMany({});
