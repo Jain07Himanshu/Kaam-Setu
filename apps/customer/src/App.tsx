@@ -3,10 +3,13 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { Header } from './components/Header';
+import { WorkerHeader } from './components/WorkerHeader';
 import { Footer } from './components/Footer';
 import { NotificationToast } from './components/NotificationToast';
 
 import { AuthLandingPage } from './pages/AuthLandingPage';
+
+// Customer Pages
 import { HomePage } from './pages/HomePage';
 import { CreateRequestPage } from './pages/CreateRequestPage';
 import { JobDetailsPage } from './pages/JobDetailsPage';
@@ -15,6 +18,16 @@ import { BookingsListPage } from './pages/BookingsListPage';
 import { BookingDetailsPage } from './pages/BookingDetailsPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { SupportPage } from './pages/SupportPage';
+
+// Worker Pro Pages
+import { WorkerDashboardPage } from './pages/worker/WorkerDashboardPage';
+import { JobOffersPage } from './pages/worker/JobOffersPage';
+import { WorkerBookingsPage } from './pages/worker/WorkerBookingsPage';
+import { EarningsPage } from './pages/worker/EarningsPage';
+import { AvailabilityPage } from './pages/worker/AvailabilityPage';
+import { WorkerProfilePage } from './pages/worker/WorkerProfilePage';
+import { WorkerNotificationsPage } from './pages/worker/WorkerNotificationsPage';
+import { WorkerSupportPage } from './pages/worker/WorkerSupportPage';
 
 function AppContent() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -30,12 +43,39 @@ function AppContent() {
     );
   }
 
-  // If not logged in, render the clean Landing Page with full Login & Registration Gateway
+  // 1. Unauthenticated Gateway (Landing Page with Login & Registration for Customer & Worker)
   if (!isAuthenticated || !user) {
     return <AuthLandingPage />;
   }
 
-  // Once authenticated as Customer (or Worker previewing), render the authenticated app
+  // 2. Authenticated as WORKER PRO
+  if (user.role === 'WORKER') {
+    return (
+      <Router>
+        <div className="min-h-screen flex flex-col bg-[#FDFBF7] text-[#1F2937]">
+          <WorkerHeader />
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<WorkerDashboardPage />} />
+              <Route path="/login" element={<Navigate to="/" replace />} />
+              <Route path="/offers" element={<JobOffersPage />} />
+              <Route path="/bookings" element={<WorkerBookingsPage />} />
+              <Route path="/earnings" element={<EarningsPage />} />
+              <Route path="/availability" element={<AvailabilityPage />} />
+              <Route path="/profile" element={<WorkerProfilePage />} />
+              <Route path="/notifications" element={<WorkerNotificationsPage />} />
+              <Route path="/support" element={<WorkerSupportPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+          <Footer />
+          <NotificationToast />
+        </div>
+      </Router>
+    );
+  }
+
+  // 3. Authenticated as CUSTOMER
   return (
     <Router>
       <div className="min-h-screen flex flex-col bg-[#FDFBF7] text-[#1F2937]">

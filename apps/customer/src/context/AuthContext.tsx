@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { api, setToken, clearToken, getToken } from '../services/api';
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -9,18 +9,22 @@ interface User {
   role: string;
   avatarUrl?: string | null;
   customerProfile?: any;
+  workerProfile?: any;
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAvailable: boolean;
+  toggleAvailability: () => Promise<void>;
   login: (credentials: { email: string; password: string }) => Promise<any>;
   register: (payload: any) => Promise<any>;
   demoLogin: (identifier?: string) => Promise<any>;
   logout: () => void;
   switchDemoUser: (identifier: string) => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +33,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [token, setTokenState] = useState<string | null>(getToken());
   const [isLoading, setIsLoading] = useState(true);
+  const [isAvailable, setIsAvailable] = useState(true);
 
   const fetchCurrentUser = async () => {
     const existingToken = getToken();
@@ -41,6 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const res = await api.getMe();
       setUser(res.user);
+      setIsAvailable(res.user?.workerProfile?.isAvailable ?? true);
     } catch (err) {
       clearToken();
       setTokenState(null);
@@ -61,6 +67,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setToken(res.token);
       setTokenState(res.token);
       setUser(res.user);
+      setIsAvailable(res.user?.workerProfile?.isAvailable ?? true);
       return res.user;
     } finally {
       setIsLoading(false);
@@ -70,10 +77,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const register = async (payload: any) => {
     setIsLoading(true);
     try {
-      const res = await api.register({ ...payload, role: 'CUSTOMER' });
+      const res = await api.register(payload);
       setToken(res.token);
       setTokenState(res.token);
       setUser(res.user);
+      setIsAvailable(res.user?.workerProfile?.isAvailable ?? true);
       return res.user;
     } finally {
       setIsLoading(false);
@@ -87,6 +95,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setToken(res.token);
       setTokenState(res.token);
       setUser(res.user);
+      setIsAvailable(res.user?.workerProfile?.isAvailable ?? true);
       return res.user;
     } finally {
       setIsLoading(false);
@@ -103,6 +112,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     await demoLogin(identifier);
   };
 
+  const toggleAvailability = async () => {
+    if (!user || user.role !== 'WORKER') return;
+    const nextState = !isAvailable;
+    setIsAvailable(nextState);
+    try {
+      await api.updateAvailability(nextState);
+    } catch (err) {
+      setIsAvailable(!nextState);
+    }
+  };
+
+  const refreshProfile = async () => {
+    try {
+      const res = await api.getMe();
+      setUser(res.user);
+      setIsAvailable(res.user?.workerProfile?.isAvailable ?? true);
+    } catch (err) {
+      // ignore
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -110,11 +140,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         token,
         isAuthenticated: !!user,
         isLoading,
+        isAvailable,
+        toggleAvailability,
         login,
         register,
         demoLogin,
         logout,
         switchDemoUser,
+        refreshProfile,
       }}
     >
       {children}

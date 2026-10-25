@@ -7,14 +7,14 @@ databases:
 
 services:
   # =============================================================
-  # 1. Backend Web Service (Express + Socket.IO + Prisma)
+  # Unified Full-Stack Application (Backend API + Customer & Worker Portals)
   # =============================================================
   - type: web
-    name: kaamsetu-api
+    name: kaamsetu-app
     runtime: node
     plan: free
     region: singapore
-    buildCommand: npm install --include=dev && npm run build:server
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm run deploy:prod --workspace=@hyperlocal/server
     healthCheckPath: /api/health
     envVars:
@@ -28,37 +28,3 @@ services:
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 7d
-
-  # =============================================================
-  # 2. Customer Application (React + Vite SPA)
-  # =============================================================
-  - type: static
-    name: kaamsetu-customer
-    buildCommand: npm install --include=dev && npm run build:customer
-    staticPublishPath: ./apps/customer/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_API_URL
-        sync: false
-      - key: VITE_SOCKET_URL
-        sync: false
-
-  # =============================================================
-  # 3. Worker Pro Application (React + Vite SPA)
-  # =============================================================
-  - type: static
-    name: kaamsetu-worker
-    buildCommand: npm install --include=dev && npm run build:worker
-    staticPublishPath: ./apps/worker/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_API_URL
-        sync: false
-      - key: VITE_SOCKET_URL
-        sync: false

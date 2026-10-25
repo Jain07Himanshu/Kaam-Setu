@@ -1,15 +1,27 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? '/api'
+    : 'http://localhost:5000/api');
 
 export function getToken(): string | null {
-  return localStorage.getItem('hyperlocal_customer_token');
+  return (
+    localStorage.getItem('hyperlocal_auth_token') ||
+    localStorage.getItem('hyperlocal_customer_token') ||
+    localStorage.getItem('hyperlocal_worker_token')
+  );
 }
 
 export function setToken(token: string) {
+  localStorage.setItem('hyperlocal_auth_token', token);
   localStorage.setItem('hyperlocal_customer_token', token);
+  localStorage.setItem('hyperlocal_worker_token', token);
 }
 
 export function clearToken() {
+  localStorage.removeItem('hyperlocal_auth_token');
   localStorage.removeItem('hyperlocal_customer_token');
+  localStorage.removeItem('hyperlocal_worker_token');
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -51,18 +63,21 @@ export const api = {
       body: JSON.stringify(payload),
     }),
 
-  demoLogin: (identifier: string = 'aarav.customer@kaamsetu.demo') =>
-    request<{ token: string; user: any }>('/auth/demo-login', {
+  demoLogin: (identifier: string = 'aarav.customer@kaamsetu.demo') => {
+    const role = identifier.includes('customer') ? 'CUSTOMER' : 'WORKER';
+    return request<{ token: string; user: any }>('/auth/demo-login', {
       method: 'POST',
-      body: JSON.stringify({ role: 'CUSTOMER', identifier }),
-    }),
+      body: JSON.stringify({ role, identifier }),
+    });
+  },
 
   getMe: () => request<{ user: any }>('/auth/me'),
 
   // Categories
   getCategories: () => request<{ categories: any[] }>('/categories'),
+  getCategoryBySlug: (slug: string) => request<{ category: any }>(`/categories/${slug}`),
 
-  // Workers
+  // Workers Directory
   getWorkers: (params?: { category?: string; availableOnly?: boolean; search?: string }) => {
     const query = new URLSearchParams();
     if (params?.category) query.append('category', params.category);
@@ -73,7 +88,7 @@ export const api = {
 
   getWorkerById: (id: string) => request<{ worker: any }>(`/workers/${id}`),
 
-  // Job Requests
+  // Customer Job Requests
   createJob: (payload: any) =>
     request<{ message: string; jobRequest: any; matchedWorkersCount: number }>('/jobs', {
       method: 'POST',
@@ -89,7 +104,7 @@ export const api = {
       method: 'PATCH',
     }),
 
-  // Quotes
+  // Quotes & Negotiations
   counterofferQuote: (quoteId: string, payload: { proposedPrice: number; message: string }) =>
     request<{ message: string; quote: any; negotiation: any }>(`/quotes/${quoteId}/counteroffer`, {
       method: 'POST',
@@ -106,10 +121,68 @@ export const api = {
       method: 'POST',
     }),
 
-  // Bookings
+  // Worker Bidding / Quotes
+  createQuote: (payload: {
+    jobRequestId: string;
+    proposedPrice: number;
+    estimatedArrivalMinutes: number;
+    scopeDescription: string;
+    exclusions?: string;
+    workerNote?: string;
+  }) =>
+    request<{ message: string; quote: any }>('/quotes', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  // Worker Offers Inbox
+  getWorkerOffers: (status?: string) => {
+    const query = status ? `?status=${status}` : '';
+    return request<{ offers: any[] }>(`/worker/offers${query}`);
+  },
+
+  getOfferById: (id: string) => request<{ offer: any }>(`/worker/offers/${id}`),
+
+  declineOffer: (id: string) =>
+    request<{ message: string; offer: any }>(`/worker/offers/${id}/decline`, {
+      method: 'POST',
+    }),
+
+  // Bookings (Shared & Worker Execution)
   getBookings: () => request<{ bookings: any[] }>('/bookings'),
 
   getBookingById: (id: string) => request<{ booking: any }>(`/bookings/${id}`),
+
+  updateBookingStatus: (
+    bookingId: string,
+    payload: { status: string; startOtp?: string; cancellationReason?: string }
+  ) =>
+    request<{ message: string; booking: any }>(`/bookings/${bookingId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  // Worker Profile, Availability & Earnings
+  getEarnings: () =>
+    request<{ summary: any; completedBookings: any[] }>('/workers/me/earnings'),
+
+  updateAvailability: (isAvailable: boolean) =>
+    request<{ message: string; workerProfile: any }>('/workers/me/availability', {
+      method: 'PATCH',
+      body: JSON.stringify({ isAvailable }),
+    }),
+
+  updateProfile: (payload: {
+    bio?: string;
+    serviceRadiusKm?: number;
+    hourlyRate?: number;
+    baseRate?: number;
+    skills?: string[];
+  }) =>
+    request<{ message: string; workerProfile: any }>('/workers/me', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
 
   // Notifications
   getNotifications: () => request<{ notifications: any[]; unreadCount: number }>('/notifications'),
@@ -132,7 +205,12 @@ export const api = {
     }),
 
   // Support
-  createSupportTicket: (payload: { category: string; subject: string; description: string; bookingId?: string }) =>
+  createSupportTicket: (payload: {
+    category: string;
+    subject: string;
+    description: string;
+    bookingId?: string;
+  }) =>
     request<{ message: string; ticket: any }>('/support', {
       method: 'POST',
       body: JSON.stringify(payload),

@@ -19,7 +19,7 @@
     "build:server": "npm --workspace=@hyperlocal/server run build",
     "build:customer": "npm --workspace=@hyperlocal/customer-app run build",
     "build:worker": "npm --workspace=@hyperlocal/worker-app run build",
-    "build": "npm run build:server && npm run build:customer && npm run build:worker"
+    "build": "npm run build:customer && npm run build:server"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

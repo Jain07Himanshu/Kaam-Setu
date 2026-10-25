@@ -14,10 +14,11 @@ import {
   Menu,
   X,
   LogOut,
+  HardHat,
 } from 'lucide-react';
 
 export const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, switchDemoUser } = useAuth();
   const { lastEvent } = useSocket();
   const location = useLocation();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -120,6 +121,16 @@ export const Header: React.FC = () => {
                 </span>
               )}
             </Link>
+
+            {/* Quick Switch to Worker Pro View */}
+            <button
+              onClick={() => switchDemoUser('suresh.plumber@kaamsetu.demo')}
+              className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-cream/80 hover:bg-brand-cream border border-brand-creamDark text-brand-primaryDark text-xs font-bold transition-all shadow-xs"
+              title="Experience Kaam Setu as a Trade Professional"
+            >
+              <HardHat className="w-3.5 h-3.5 text-brand-primary" />
+              <span>Worker Pro View</span>
+            </button>
 
             {/* Demo Switcher */}
             <DemoSwitcher />

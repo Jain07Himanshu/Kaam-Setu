@@ -50,7 +50,6 @@ export const AuthLandingPage: React.FC = () => {
   // UI state
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [workerSuccess, setWorkerSuccess] = useState<boolean>(false);
 
   // Handle Customer or Worker Login
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -64,10 +63,7 @@ export const AuthLandingPage: React.FC = () => {
     setErrorMessage(null);
 
     try {
-      const loggedUser = await login({ email: loginEmail, password: loginPassword });
-      if (loggedUser?.role === 'WORKER') {
-        setWorkerSuccess(true);
-      }
+      await login({ email: loginEmail, password: loginPassword });
     } catch (err: any) {
       setErrorMessage(err.message || 'Invalid email or password. Please try again.');
     } finally {
@@ -139,7 +135,6 @@ export const AuthLandingPage: React.FC = () => {
         city: workerCity,
         address: `${workerCity} Trade Hub`,
       });
-      setWorkerSuccess(true);
     } catch (err: any) {
       setErrorMessage(err.message || 'Worker registration failed. Email may already be registered.');
     } finally {
@@ -152,10 +147,7 @@ export const AuthLandingPage: React.FC = () => {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      const loggedUser = await demoLogin(email);
-      if (loggedUser?.role === 'WORKER') {
-        setWorkerSuccess(true);
-      }
+      await demoLogin(email);
     } catch (err: any) {
       setErrorMessage(err.message || 'Demo login failed');
     } finally {
@@ -211,7 +203,6 @@ export const AuthLandingPage: React.FC = () => {
               onClick={() => {
                 setActiveRole('CUSTOMER');
                 setErrorMessage(null);
-                setWorkerSuccess(false);
               }}
               className={`flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-extrabold transition-all ${
                 activeRole === 'CUSTOMER'
@@ -228,7 +219,6 @@ export const AuthLandingPage: React.FC = () => {
               onClick={() => {
                 setActiveRole('WORKER');
                 setErrorMessage(null);
-                setWorkerSuccess(false);
               }}
               className={`flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-extrabold transition-all ${
                 activeRole === 'WORKER'
@@ -282,30 +272,8 @@ export const AuthLandingPage: React.FC = () => {
           </div>
         )}
 
-        {/* Worker Registered / Logged In Notice */}
-        {workerSuccess && (
-          <div className="p-5 rounded-2xl bg-brand-surface border border-brand-secondary/40 space-y-3 animate-in fade-in">
-            <div className="flex items-center gap-2 text-brand-primaryDark font-bold text-sm">
-              <CheckCircle className="w-5 h-5 text-brand-primary" />
-              <span>Worker Account Ready!</span>
-            </div>
-            <p className="text-xs text-gray-600 leading-relaxed">
-              You are signed in as a verified trade pro. To manage your active jobs, accept quotes, and track earnings, open the dedicated <strong>Kaam Setu Pro Worker Application</strong>:
-            </p>
-            <a
-              href="http://localhost:5174"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-brand-primary hover:bg-brand-primaryDark text-white text-xs font-bold shadow-md transition-all"
-            >
-              <span>Launch Kaam Setu Pro Dashboard (Port 5174)</span>
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
-        )}
-
         {/* -------------------- 1. LOGIN FORM (Customer or Worker) -------------------- */}
-        {!workerSuccess && authMode === 'LOGIN' && (
+        {authMode === 'LOGIN' && (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
@@ -399,7 +367,7 @@ export const AuthLandingPage: React.FC = () => {
         )}
 
         {/* -------------------- 2. CUSTOMER REGISTRATION FORM -------------------- */}
-        {!workerSuccess && authMode === 'REGISTER' && activeRole === 'CUSTOMER' && (
+        {authMode === 'REGISTER' && activeRole === 'CUSTOMER' && (
           <form onSubmit={handleCustomerRegister} className="space-y-4 animate-in fade-in">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -523,7 +491,7 @@ export const AuthLandingPage: React.FC = () => {
         )}
 
         {/* -------------------- 3. WORKER PRO REGISTRATION FORM -------------------- */}
-        {!workerSuccess && authMode === 'REGISTER' && activeRole === 'WORKER' && (
+        {authMode === 'REGISTER' && activeRole === 'WORKER' && (
           <form onSubmit={handleWorkerRegister} className="space-y-4 animate-in fade-in">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>

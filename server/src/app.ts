@@ -1,8 +1,14 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { config } from './config/index.js';
 import { authenticate } from './middleware/auth.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Controllers
 import * as authController from './modules/auth/authController.js';
@@ -90,7 +96,19 @@ export function createApp() {
   app.post('/api/support', authenticate, supportController.createSupportTicket);
   app.get('/api/support', authenticate, supportController.getMySupportTickets);
 
-  // 404 Handler
+  // 11. Statically Serve Unified Frontend Client (Full-Stack Deployment)
+  const clientDistPath = path.resolve(__dirname, '../../apps/customer/dist');
+  if (fs.existsSync(clientDistPath)) {
+    app.use(express.static(clientDistPath));
+    app.get('*', (req: Request, res: Response, next: NextFunction) => {
+      if (req.path.startsWith('/api')) {
+        return next();
+      }
+      res.sendFile(path.join(clientDistPath, 'index.html'));
+    });
+  }
+
+  // 404 Handler for API routes
   app.use((req: Request, res: Response) => {
     res.status(404).json({ error: `Route not found: ${req.method} ${req.originalUrl}` });
   });
