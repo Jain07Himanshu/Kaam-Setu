@@ -41,9 +41,9 @@ Kaam Setu runs on Render as a connected multi-service setup:
 | Component | Render Service Type | Root Directory | Build Command | Start / Publish Command | Health Check Path |
 |---|---|---|---|---|---|
 | **Database** | PostgreSQL | — | — | — | — |
-| **Backend API** | Web Service | `.` (or blank) | `npm install && npm run build:server` | `npm run deploy:prod --workspace=@hyperlocal/server` | `/api/health` |
-| **Customer App** | Static Site | `.` (or blank) | `npm install && npm run build:customer` | `apps/customer/dist` | — |
-| **Worker Pro App** | Static Site | `.` (or blank) | `npm install && npm run build:worker` | `apps/worker/dist` | — |
+| **Backend API** | Web Service | `.` (or blank) | `npm install --include=dev && npm run build:server` | `npm run deploy:prod --workspace=@hyperlocal/server` | `/api/health` |
+| **Customer App** | Static Site | `.` (or blank) | `npm install --include=dev && npm run build:customer` | `apps/customer/dist` | — |
+| **Worker Pro App** | Static Site | `.` (or blank) | `npm install --include=dev && npm run build:worker` | `apps/worker/dist` | — |
 
 ---
 
@@ -76,7 +76,7 @@ Kaam Setu runs on Render as a connected multi-service setup:
    - **Runtime**: `Node`
    - **Build Command**:
      ```bash
-     npm install && npm run build:server
+     npm install --include=dev && npm run build:server
      ```
    - **Start Command**:
      ```bash
@@ -114,7 +114,7 @@ Kaam Setu runs on Render as a connected multi-service setup:
    - **Root Directory**: Leave blank
    - **Build Command**:
      ```bash
-     npm install && npm run build:customer
+     npm install --include=dev && npm run build:customer
      ```
    - **Publish Directory**:
      ```
@@ -148,7 +148,7 @@ Kaam Setu runs on Render as a connected multi-service setup:
    - **Root Directory**: Leave blank
    - **Build Command**:
      ```bash
-     npm install && npm run build:worker
+     npm install --include=dev && npm run build:worker
      ```
    - **Publish Directory**:
      ```

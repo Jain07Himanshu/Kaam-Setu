@@ -14,7 +14,7 @@ services:
     runtime: node
     plan: free
     region: singapore
-    buildCommand: npm install && npm run build:server
+    buildCommand: npm install --include=dev && npm run build:server
     startCommand: npm run deploy:prod --workspace=@hyperlocal/server
     healthCheckPath: /api/health
     envVars:
@@ -34,7 +34,7 @@ services:
   # =============================================================
   - type: static
     name: kaamsetu-customer
-    buildCommand: npm install && npm run build:customer
+    buildCommand: npm install --include=dev && npm run build:customer
     staticPublishPath: ./apps/customer/dist
     routes:
       - type: rewrite
@@ -51,7 +51,7 @@ services:
   # =============================================================
   - type: static
     name: kaamsetu-worker
-    buildCommand: npm install && npm run build:worker
+    buildCommand: npm install --include=dev && npm run build:worker
     staticPublishPath: ./apps/worker/dist
     routes:
       - type: rewrite
