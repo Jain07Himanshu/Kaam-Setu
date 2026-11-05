@@ -60,28 +60,30 @@ function AppContent() {
   if (user.role === 'WORKER') {
     return (
       <Router>
-        <div className="min-h-screen flex flex-col bg-[#FDFBF7] text-[#1F2937]">
+        <div className="min-h-screen flex flex-col lg:flex-row bg-[#FDFBF7] text-[#1F2937]">
           <WorkerHeader />
-          <main className="flex-1">
-            <Routes>
-              <Route path="/" element={<WorkerDashboardPage />} />
-              <Route path="/login" element={<Navigate to="/" replace />} />
-              <Route path="/offers" element={<JobOffersPage />} />
-              <Route path="/bookings" element={<WorkerBookingsPage />} />
-              <Route path="/earnings" element={<EarningsPage />} />
-              <Route path="/availability" element={<AvailabilityPage />} />
-              <Route path="/profile" element={<WorkerProfilePage />} />
-              <Route path="/notifications" element={<WorkerNotificationsPage />} />
-              <Route path="/support" element={<WorkerSupportPage />} />
-              <Route path="/verification" element={<VerificationCentrePage />} />
-              <Route path="/terms-charter" element={<WorkerRightsTermsPage />} />
-              <Route path="/visiting-charges" element={<VisitingChargesSettingsPage />} />
-              <Route path="/rpl-and-badges" element={<RplAndBadgesPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-          <Footer />
-          <NotificationToast />
+          <div className="flex-1 flex flex-col min-w-0">
+            <main className="flex-1">
+              <Routes>
+                <Route path="/" element={<WorkerDashboardPage />} />
+                <Route path="/login" element={<Navigate to="/" replace />} />
+                <Route path="/offers" element={<JobOffersPage />} />
+                <Route path="/bookings" element={<WorkerBookingsPage />} />
+                <Route path="/earnings" element={<EarningsPage />} />
+                <Route path="/availability" element={<AvailabilityPage />} />
+                <Route path="/profile" element={<WorkerProfilePage />} />
+                <Route path="/notifications" element={<WorkerNotificationsPage />} />
+                <Route path="/support" element={<WorkerSupportPage />} />
+                <Route path="/verification" element={<VerificationCentrePage />} />
+                <Route path="/terms-charter" element={<WorkerRightsTermsPage />} />
+                <Route path="/visiting-charges" element={<VisitingChargesSettingsPage />} />
+                <Route path="/rpl-and-badges" element={<RplAndBadgesPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </main>
+            <Footer />
+            <NotificationToast />
+          </div>
         </div>
       </Router>
     );
@@ -90,28 +92,30 @@ function AppContent() {
   // 3. Authenticated as CUSTOMER
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-[#FDFBF7] text-[#1F2937]">
+      <div className="min-h-screen flex flex-col lg:flex-row bg-[#FDFBF7] text-[#1F2937]">
         <Header />
-        <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<Navigate to="/" replace />} />
-            <Route path="/request" element={<CreateRequestPage />} />
-            <Route path="/jobs/:id" element={<JobDetailsPage />} />
-            <Route path="/my-requests" element={<MyRequestsPage />} />
-            <Route path="/bookings" element={<BookingsListPage />} />
-            <Route path="/bookings/:id" element={<BookingDetailsPage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/support" element={<SupportPage />} />
-            <Route path="/emergency-contacts" element={<EmergencyContactsPage />} />
-            <Route path="/customer-care" element={<CustomerCarePage />} />
-            <Route path="/safety-centre" element={<SafetyCentrePage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-        <Footer />
-        <NotificationToast />
+        <div className="flex-1 flex flex-col min-w-0">
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<Navigate to="/" replace />} />
+              <Route path="/request" element={<CreateRequestPage />} />
+              <Route path="/jobs/:id" element={<JobDetailsPage />} />
+              <Route path="/my-requests" element={<MyRequestsPage />} />
+              <Route path="/bookings" element={<BookingsListPage />} />
+              <Route path="/bookings/:id" element={<BookingDetailsPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/support" element={<SupportPage />} />
+              <Route path="/emergency-contacts" element={<EmergencyContactsPage />} />
+              <Route path="/customer-care" element={<CustomerCarePage />} />
+              <Route path="/safety-centre" element={<SafetyCentrePage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+          <Footer />
+          <NotificationToast />
+        </div>
       </div>
     </Router>
   );

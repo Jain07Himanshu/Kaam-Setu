@@ -41,28 +41,30 @@ function AppContent() {
 
   return (
     <Router>
-      <div className="min-h-screen flex flex-col bg-[#FDFBF7] text-[#1F2937]">
+      <div className="min-h-screen flex flex-col lg:flex-row bg-[#FDFBF7] text-[#1F2937]">
         <Header />
-        <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<DashboardPage />} />
-            <Route path="/login" element={<Navigate to="/" replace />} />
-            <Route path="/offers" element={<JobOffersPage />} />
-            <Route path="/bookings" element={<WorkerBookingsPage />} />
-            <Route path="/earnings" element={<EarningsPage />} />
-            <Route path="/availability" element={<AvailabilityPage />} />
-            <Route path="/profile" element={<WorkerProfilePage />} />
-            <Route path="/notifications" element={<WorkerNotificationsPage />} />
-            <Route path="/support" element={<WorkerSupportPage />} />
-            <Route path="/verification" element={<VerificationCentrePage />} />
-            <Route path="/terms-charter" element={<WorkerRightsTermsPage />} />
-            <Route path="/visiting-charges" element={<VisitingChargesSettingsPage />} />
-            <Route path="/rpl-and-badges" element={<RplAndBadgesPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-        <Footer />
-        <NotificationToast />
+        <div className="flex-1 flex flex-col min-w-0">
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/login" element={<Navigate to="/" replace />} />
+              <Route path="/offers" element={<JobOffersPage />} />
+              <Route path="/bookings" element={<WorkerBookingsPage />} />
+              <Route path="/earnings" element={<EarningsPage />} />
+              <Route path="/availability" element={<AvailabilityPage />} />
+              <Route path="/profile" element={<WorkerProfilePage />} />
+              <Route path="/notifications" element={<WorkerNotificationsPage />} />
+              <Route path="/support" element={<WorkerSupportPage />} />
+              <Route path="/verification" element={<VerificationCentrePage />} />
+              <Route path="/terms-charter" element={<WorkerRightsTermsPage />} />
+              <Route path="/visiting-charges" element={<VisitingChargesSettingsPage />} />
+              <Route path="/rpl-and-badges" element={<RplAndBadgesPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+          <Footer />
+          <NotificationToast />
+        </div>
       </div>
     </Router>
   );
