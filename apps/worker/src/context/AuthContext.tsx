@@ -9,6 +9,7 @@ interface WorkerUser {
   role: string;
   avatarUrl?: string | null;
   workerProfile?: any;
+  serviceLocations?: any[];
 }
 
 interface AuthContextType {

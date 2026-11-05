@@ -297,6 +297,119 @@ export async function getCurrentUser(req: AuthenticatedRequest, res: Response) {
   }
 }
 
+const updateProfileSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').optional(),
+  phone: z.string().optional(),
+  avatarUrl: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
+  bio: z.string().optional(),
+});
+
+export async function updateUserProfile(req: AuthenticatedRequest, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const data = updateProfileSchema.parse(req.body);
+    const userId = req.user.userId;
+
+    const userUpdate: any = {};
+    if (data.name) userUpdate.name = data.name.trim();
+    if (data.avatarUrl) userUpdate.avatarUrl = data.avatarUrl;
+    if (data.phone) {
+      try {
+        userUpdate.phone = normalizeIndianPhone(data.phone);
+      } catch {
+        userUpdate.phone = data.phone.trim();
+      }
+    }
+
+    if (Object.keys(userUpdate).length > 0) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: userUpdate,
+      });
+    }
+
+    if (data.address) {
+      const cust = await prisma.customerProfile.findUnique({ where: { userId } });
+      if (cust) {
+        await prisma.customerProfile.update({
+          where: { userId },
+          data: { preferredAddress: data.address },
+        });
+      }
+    }
+
+    if (data.address || data.city || data.postalCode) {
+      const defaultLoc = await prisma.serviceLocation.findFirst({
+        where: { userId, isDefault: true },
+      });
+      if (defaultLoc) {
+        await prisma.serviceLocation.update({
+          where: { id: defaultLoc.id },
+          data: {
+            address: data.address || defaultLoc.address,
+            city: data.city || defaultLoc.city,
+            postalCode: data.postalCode || defaultLoc.postalCode,
+          },
+        });
+      } else {
+        await prisma.serviceLocation.create({
+          data: {
+            userId,
+            label: 'Home',
+            address: data.address || 'Powai, Mumbai',
+            city: data.city || 'Mumbai',
+            postalCode: data.postalCode || '400076',
+            latitude: 19.1176,
+            longitude: 72.9060,
+            isDefault: true,
+          },
+        });
+      }
+    }
+
+    if (data.bio && req.user.role === 'WORKER') {
+      const worker = await prisma.workerProfile.findUnique({ where: { userId } });
+      if (worker) {
+        await prisma.workerProfile.update({
+          where: { userId },
+          data: { bio: data.bio },
+        });
+      }
+    }
+
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        customerProfile: true,
+        workerProfile: {
+          include: {
+            verifications: true,
+            workerServices: { include: { serviceCategory: true } },
+          },
+        },
+        serviceLocations: true,
+      },
+    });
+
+    return res.json({
+      message: 'Profile updated successfully',
+      user: updatedUser,
+    });
+  } catch (error: any) {
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ error: error.errors[0]?.message || 'Validation error' });
+    }
+    console.error('Update profile error:', error);
+    return res.status(500).json({ error: 'Failed to update profile' });
+  }
+}
+
 // Demo quick sign-in switcher for hackathon judges & instant testing
 export async function demoLogin(req: Request, res: Response) {
   try {

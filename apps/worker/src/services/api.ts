@@ -69,6 +69,21 @@ export const api = {
 
   getMe: () => request<{ user: any }>('/auth/me'),
 
+  updateUserProfile: (data: {
+    name?: string;
+    phone?: string;
+    avatarUrl?: string;
+    address?: string;
+    city?: string;
+    postalCode?: string;
+    bio?: string;
+  }) => {
+    return request<{ message: string; user: any }>('/auth/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
   // Categories
   getCategories: () => request<{ categories: any[] }>('/categories'),
 

@@ -21,6 +21,7 @@ import { SupportPage } from './pages/SupportPage';
 import { EmergencyContactsPage } from './pages/EmergencyContactsPage';
 import { CustomerCarePage } from './pages/CustomerCarePage';
 import { SafetyCentrePage } from './pages/SafetyCentrePage';
+import { ProfilePage } from './pages/ProfilePage';
 
 // Worker Pro Pages
 import { WorkerDashboardPage } from './pages/worker/WorkerDashboardPage';
@@ -105,6 +106,7 @@ function AppContent() {
             <Route path="/emergency-contacts" element={<EmergencyContactsPage />} />
             <Route path="/customer-care" element={<CustomerCarePage />} />
             <Route path="/safety-centre" element={<SafetyCentrePage />} />
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

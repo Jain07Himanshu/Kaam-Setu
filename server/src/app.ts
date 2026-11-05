@@ -59,6 +59,7 @@ export function createApp() {
   app.post('/api/auth/login', authController.login);
   app.post('/api/auth/demo-login', authController.demoLogin);
   app.get('/api/auth/me', authenticate, authController.getCurrentUser);
+  app.patch('/api/auth/profile', authenticate, authController.updateUserProfile);
 
   // 2. Service Categories
   app.get('/api/categories', servicesController.getCategories);

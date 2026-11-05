@@ -10,6 +10,7 @@ export interface User {
   avatarUrl?: string | null;
   customerProfile?: any;
   workerProfile?: any;
+  serviceLocations?: any[];
 }
 
 export interface AuthContextType {
