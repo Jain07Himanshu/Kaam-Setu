@@ -3,11 +3,16 @@ import { z } from 'zod';
 import { prisma } from '../../database/prisma.js';
 import { AuthenticatedRequest } from '../../middleware/auth.js';
 import { emitToUser } from '../../sockets/socketManager.js';
+import { evaluateAndAwardWorkerBadges } from '../credibility/badgesEngine.js';
 
 const createReviewSchema = z.object({
   bookingId: z.string().min(1),
   rating: z.number().int().min(1).max(5),
   comment: z.string().min(5, 'Review comment must be at least 5 characters'),
+  serviceQuality: z.number().int().min(1).max(5).optional(),
+  punctuality: z.number().int().min(1).max(5).optional(),
+  professionalism: z.number().int().min(1).max(5).optional(),
+  communication: z.number().int().min(1).max(5).optional(),
 });
 
 export async function createReview(req: AuthenticatedRequest, res: Response) {
@@ -16,7 +21,7 @@ export async function createReview(req: AuthenticatedRequest, res: Response) {
       return res.status(403).json({ error: 'Only customers can leave reviews' });
     }
 
-    const { bookingId, rating, comment } = createReviewSchema.parse(req.body);
+    const { bookingId, rating, comment, serviceQuality, punctuality, professionalism, communication } = createReviewSchema.parse(req.body);
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -54,6 +59,10 @@ export async function createReview(req: AuthenticatedRequest, res: Response) {
         revieweeId: booking.worker.userId,
         rating,
         comment,
+        serviceQuality: serviceQuality ?? undefined,
+        punctuality: punctuality ?? undefined,
+        professionalism: professionalism ?? undefined,
+        communication: communication ?? undefined,
       },
       include: {
         reviewer: { select: { id: true, name: true, avatarUrl: true } },
@@ -76,6 +85,9 @@ export async function createReview(req: AuthenticatedRequest, res: Response) {
         ratingCount: newCount,
       },
     });
+
+    // Automatically evaluate credibility experience milestones and badges
+    await evaluateAndAwardWorkerBadges(booking.workerId);
 
     // Notify worker
     emitToUser(booking.worker.userId, 'review.received', { review });

@@ -18,6 +18,9 @@ import { BookingsListPage } from './pages/BookingsListPage';
 import { BookingDetailsPage } from './pages/BookingDetailsPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { SupportPage } from './pages/SupportPage';
+import { EmergencyContactsPage } from './pages/EmergencyContactsPage';
+import { CustomerCarePage } from './pages/CustomerCarePage';
+import { SafetyCentrePage } from './pages/SafetyCentrePage';
 
 // Worker Pro Pages
 import { WorkerDashboardPage } from './pages/worker/WorkerDashboardPage';
@@ -28,6 +31,10 @@ import { AvailabilityPage } from './pages/worker/AvailabilityPage';
 import { WorkerProfilePage } from './pages/worker/WorkerProfilePage';
 import { WorkerNotificationsPage } from './pages/worker/WorkerNotificationsPage';
 import { WorkerSupportPage } from './pages/worker/WorkerSupportPage';
+import { VerificationCentrePage } from './pages/worker/VerificationCentrePage';
+import { WorkerRightsTermsPage } from './pages/worker/WorkerRightsTermsPage';
+import { VisitingChargesSettingsPage } from './pages/worker/VisitingChargesSettingsPage';
+import { RplAndBadgesPage } from './pages/worker/RplAndBadgesPage';
 
 function AppContent() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -65,6 +72,10 @@ function AppContent() {
               <Route path="/profile" element={<WorkerProfilePage />} />
               <Route path="/notifications" element={<WorkerNotificationsPage />} />
               <Route path="/support" element={<WorkerSupportPage />} />
+              <Route path="/verification" element={<VerificationCentrePage />} />
+              <Route path="/terms-charter" element={<WorkerRightsTermsPage />} />
+              <Route path="/visiting-charges" element={<VisitingChargesSettingsPage />} />
+              <Route path="/rpl-and-badges" element={<RplAndBadgesPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
@@ -91,6 +102,9 @@ function AppContent() {
             <Route path="/bookings/:id" element={<BookingDetailsPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/support" element={<SupportPage />} />
+            <Route path="/emergency-contacts" element={<EmergencyContactsPage />} />
+            <Route path="/customer-care" element={<CustomerCarePage />} />
+            <Route path="/safety-centre" element={<SafetyCentrePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

@@ -16,6 +16,11 @@ import {
   Send,
   X,
   ArrowRight,
+  AlertOctagon,
+  DollarSign,
+  Heart,
+  MessageSquare,
+  ThumbsUp,
 } from 'lucide-react';
 
 export const BookingDetailsPage: React.FC = () => {
@@ -24,7 +29,23 @@ export const BookingDetailsPage: React.FC = () => {
 
   const [booking, setBooking] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Safety & Check-in state
+  const [safetyStatus, setSafetyStatus] = useState<any | null>(null);
+  const [isTriggeringSos, setIsTriggeringSos] = useState(false);
+  const [sosSuccessMsg, setSosSuccessMsg] = useState<string | null>(null);
+
+  // Visiting Charge state
+  const [visitingCharge, setVisitingCharge] = useState<any | null>(null);
+  const [hasAcknowledgedCharge, setHasAcknowledgedCharge] = useState(false);
+  const [isAcknowledgingCharge, setIsAcknowledgingCharge] = useState(false);
+
+  // Multicategory Review state
   const [rating, setRating] = useState(5);
+  const [serviceQuality, setServiceQuality] = useState(5);
+  const [punctuality, setPunctuality] = useState(5);
+  const [professionalism, setProfessionalism] = useState(5);
+  const [communication, setCommunication] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
@@ -35,6 +56,19 @@ export const BookingDetailsPage: React.FC = () => {
     try {
       const res = await api.getBookingById(id);
       setBooking(res.booking);
+      if (res.booking?.chargeAcknowledgement) {
+        setHasAcknowledgedCharge(true);
+      }
+
+      // Fetch safety status
+      const safetyRes = await api.getBookingSafetyStatus(id).catch(() => null);
+      if (safetyRes) setSafetyStatus(safetyRes);
+
+      // Fetch visiting charge terms
+      if (res.booking?.workerId) {
+        const chargeRes = await api.getWorkerVisitingCharges(res.booking.workerId).catch(() => null);
+        if (chargeRes) setVisitingCharge(chargeRes);
+      }
     } catch (err: any) {
       console.error('Failed to load booking:', err);
     } finally {
@@ -64,6 +98,52 @@ export const BookingDetailsPage: React.FC = () => {
     }
   }, [lastEvent]);
 
+  const handleAcknowledgeVisitingCharge = async () => {
+    if (!booking) return;
+    setIsAcknowledgingCharge(true);
+    try {
+      await api.acknowledgeVisitingCharge(booking.id);
+      setHasAcknowledgedCharge(true);
+    } catch (err: any) {
+      alert(err.message || 'Failed to acknowledge visiting charge');
+    } finally {
+      setIsAcknowledgingCharge(false);
+    }
+  };
+
+  const handleTriggerBookingSos = async () => {
+    if (!booking) return;
+    if (!confirm('Are you sure you want to trigger an Emergency SOS? This will immediately place automated calls to your emergency contacts.')) return;
+
+    setIsTriggeringSos(true);
+    setSosSuccessMsg(null);
+    try {
+      const res = await api.triggerSos({
+        bookingId: booking.id,
+        triggerType: 'SOS',
+        address: `${booking.jobRequest?.addressLabel}, ${booking.jobRequest?.city}`,
+      });
+      setSosSuccessMsg(`Emergency SOS Activated! ${res.contactsNotifiedCount} emergency contacts dialed.`);
+      const updatedSafety = await api.getBookingSafetyStatus(booking.id);
+      setSafetyStatus(updatedSafety);
+    } catch (err: any) {
+      alert(err.message || 'Failed to trigger SOS');
+    } finally {
+      setIsTriggeringSos(false);
+    }
+  };
+
+  const handleAcknowledgeCheckin = async (checkInId: string) => {
+    try {
+      await api.acknowledgeCheckin(checkInId);
+      const updatedSafety = await api.getBookingSafetyStatus(booking.id);
+      setSafetyStatus(updatedSafety);
+      alert('Thank you! Confirmed you are safe and sound.');
+    } catch (err: any) {
+      alert(err.message || 'Failed to confirm check-in');
+    }
+  };
+
   const handleReviewSubmit = async () => {
     if (!booking) return;
     if (reviewComment.trim().length < 5) {
@@ -79,6 +159,10 @@ export const BookingDetailsPage: React.FC = () => {
         bookingId: booking.id,
         rating,
         comment: reviewComment,
+        serviceQuality,
+        punctuality,
+        professionalism,
+        communication,
       });
 
       setReviewSuccess(true);
@@ -112,7 +196,6 @@ export const BookingDetailsPage: React.FC = () => {
   const isCompleted = booking.status === 'COMPLETED';
   const hasReviewed = !!booking.review;
 
-  // Timeline steps
   const timelineSteps = [
     { key: 'CONFIRMED', label: 'Confirmed', desc: 'Booking accepted & scheduled' },
     { key: 'ON_THE_WAY', label: 'On The Way', desc: 'Worker en route to address' },
@@ -146,6 +229,35 @@ export const BookingDetailsPage: React.FC = () => {
           <div className="text-2xl font-black text-brand-primary">₹{booking.agreedPrice}</div>
         </div>
       </div>
+
+      {/* Pre-Booking Visiting Charge Notice & Acknowledgement */}
+      {visitingCharge && !hasAcknowledgedCharge && !isCompleted && booking.status !== 'CANCELLED' && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center flex-shrink-0 font-bold">
+              <DollarSign className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-amber-900">
+                Visiting & Inspection Charge Notice: ₹{visitingCharge.amount}
+              </h4>
+              <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                "{visitingCharge.terms || 'Standard diagnostic inspection fee. Deducted from final service bill upon hire.'}"
+              </p>
+              <p className="text-[11px] text-amber-700/80 mt-1">
+                Please acknowledge this visiting policy before technician arrival.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleAcknowledgeVisitingCharge}
+            disabled={isAcknowledgingCharge}
+            className="w-full md:w-auto px-5 py-2.5 bg-amber-600 text-white font-bold text-xs rounded-xl shadow-md hover:bg-amber-700 transition disabled:opacity-50 shrink-0"
+          >
+            {isAcknowledgingCharge ? 'Confirming...' : 'I Acknowledge & Agree'}
+          </button>
+        </div>
+      )}
 
       {/* Progress Timeline */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-md p-6 sm:p-8 space-y-6">
@@ -183,6 +295,62 @@ export const BookingDetailsPage: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* Active Service Safety Card (SOS Button & Check-In Milestones) */}
+      {!isCompleted && booking.status !== 'CANCELLED' && (
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+              <AlertOctagon className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="font-extrabold text-base text-gray-900">Safety & Rapid Protection Active</h4>
+                {safetyStatus?.hasActiveSos && (
+                  <span className="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-bounce">
+                    SOS ACTIVE
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-0.5 max-w-lg leading-relaxed">
+                If at any moment you feel unsafe or experience misconduct during this in-home service, trigger the SOS button below.
+              </p>
+
+              {/* Pending Safety Check-In Prompt if any */}
+              {safetyStatus?.checkIns?.some((c: any) => c.status === 'SCHEDULED' || c.status === 'REMINDER_SENT') && (
+                <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center justify-between gap-3 text-xs">
+                  <span className="text-blue-800">
+                    🔔 Safety Check-in Milestone: Is everything going well with technician?
+                  </span>
+                  <button
+                    onClick={() => handleAcknowledgeCheckin(safetyStatus.checkIns[0].id)}
+                    className="bg-blue-600 text-white font-bold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-700 transition shrink-0"
+                  >
+                    I am Safe
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-end gap-2 w-full md:w-auto">
+            <button
+              onClick={handleTriggerBookingSos}
+              disabled={isTriggeringSos}
+              className="w-full md:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <AlertOctagon className="w-4 h-4" />
+              <span>{isTriggeringSos ? 'Dispatched...' : 'Trigger Emergency SOS'}</span>
+            </button>
+            <Link
+              to="/emergency-contacts"
+              className="text-[11px] text-gray-400 hover:text-brand-primary underline"
+            >
+              Manage {safetyStatus?.emergencyContactsCount || 3} Emergency Contacts
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Verification OTP Callout Card */}
       {!isCompleted && booking.status !== 'CANCELLED' && (
@@ -265,14 +433,14 @@ export const BookingDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Customer Review & Rating Form (when completed) */}
+      {/* Multicategory Review & Rating Form (when completed) */}
       {isCompleted && (
         <div className="bg-white rounded-3xl border border-gray-100 shadow-md p-6 sm:p-8 space-y-4 animate-in fade-in">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
             <div>
-              <h3 className="text-lg font-bold text-charcoal">Service Feedback & Rating</h3>
+              <h3 className="text-lg font-bold text-charcoal">Comprehensive Quality Review & Rating</h3>
               <p className="text-xs text-gray-500">
-                {hasReviewed ? 'Thank you! Your verified review has been recorded.' : 'Rate your experience with this verified local professional.'}
+                {hasReviewed ? 'Thank you! Your verified multicategory review is on record.' : 'Rate your technician across 4 key dimensions to award credibility badges.'}
               </p>
             </div>
             {hasReviewed && (
@@ -307,10 +475,73 @@ export const BookingDetailsPage: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-5">
+              {/* Multicategory Sliders */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <div>
+                  <div className="flex justify-between text-xs font-bold text-gray-700 mb-1">
+                    <span>Service Quality</span>
+                    <span className="text-brand-primary">{serviceQuality} / 5</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={5}
+                    value={serviceQuality}
+                    onChange={(e) => setServiceQuality(Number(e.target.value))}
+                    className="w-full accent-brand-primary"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-bold text-gray-700 mb-1">
+                    <span>Punctuality</span>
+                    <span className="text-brand-primary">{punctuality} / 5</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={5}
+                    value={punctuality}
+                    onChange={(e) => setPunctuality(Number(e.target.value))}
+                    className="w-full accent-brand-primary"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-bold text-gray-700 mb-1">
+                    <span>Professionalism & Conduct</span>
+                    <span className="text-brand-primary">{professionalism} / 5</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={5}
+                    value={professionalism}
+                    onChange={(e) => setProfessionalism(Number(e.target.value))}
+                    className="w-full accent-brand-primary"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-bold text-gray-700 mb-1">
+                    <span>Communication</span>
+                    <span className="text-brand-primary">{communication} / 5</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={5}
+                    value={communication}
+                    onChange={(e) => setCommunication(Number(e.target.value))}
+                    className="w-full accent-brand-primary"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1.5">
-                  Rating (1 to 5 Stars)
+                  Overall Rating (Stars)
                 </label>
                 <div className="flex items-center gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -335,11 +566,11 @@ export const BookingDetailsPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1.5">
-                  Your Review & Comments
+                  Your Verified Review & Comments
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="How was the craftsmanship, punctuality, and cleanliness of the job?"
+                  placeholder="How was the craftsmanship, punctuality, and overall experience with this professional?"
                   value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-xs focus:border-brand-primary outline-none leading-relaxed"
@@ -354,7 +585,7 @@ export const BookingDetailsPage: React.FC = () => {
                   className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primaryDark text-white text-xs font-bold shadow-md shadow-brand-primary/20 transition-all disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>{isSubmittingReview ? 'Submitting...' : 'Submit Verified Review'}</span>
+                  <span>{isSubmittingReview ? 'Submitting...' : 'Submit Verified Multicategory Review'}</span>
                 </button>
               </div>
             </div>

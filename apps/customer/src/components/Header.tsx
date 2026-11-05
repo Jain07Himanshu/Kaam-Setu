@@ -41,7 +41,9 @@ export const Header: React.FC = () => {
     { label: 'Explore', path: '/' },
     { label: 'My Requests', path: '/my-requests' },
     { label: 'Bookings', path: '/bookings' },
-    { label: 'Support', path: '/support' },
+    { label: 'Emergency Contacts', path: '/emergency-contacts' },
+    { label: 'Safety Hub', path: '/safety-centre' },
+    { label: 'Customer Care', path: '/customer-care' },
   ];
 
   return (

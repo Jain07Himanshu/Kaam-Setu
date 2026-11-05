@@ -17,6 +17,21 @@ async function main() {
   }
 
   // 1. Clean existing records for clean idempotent seed
+  await prisma.emergencyCallLog.deleteMany({});
+  await prisma.safetyCheckIn.deleteMany({});
+  await prisma.safetyEvent.deleteMany({});
+  await prisma.bookingChargeAcknowledgement.deleteMany({});
+  await prisma.certificateVerificationRecord.deleteMany({});
+  await prisma.workerSkillEvidence.deleteMany({});
+  await prisma.workerIdentityDocument.deleteMany({});
+  await prisma.workerTermsAcceptance.deleteMany({});
+  await prisma.workerRPLApplication.deleteMany({});
+  await prisma.workerBadge.deleteMany({});
+  await prisma.visitingCharge.deleteMany({});
+  await prisma.customerEmergencyContact.deleteMany({});
+  await prisma.customerCareSetting.deleteMany({});
+  await prisma.duplicateAccountFlag.deleteMany({});
+  await prisma.termsAndPolicy.deleteMany({});
   await prisma.review.deleteMany({});
   await prisma.quoteNegotiation.deleteMany({});
   await prisma.booking.deleteMany({});
@@ -464,10 +479,252 @@ async function main() {
       reviewerId: customerAaravUser.id,
       revieweeId: workerSureshUser.id,
       rating: 5,
+      serviceQuality: 5,
+      punctuality: 5,
+      professionalism: 5,
+      communication: 5,
       comment: 'Suresh ji arrived on time with all necessary spare parts and tools. Fixed the kitchen leak neatly in 40 minutes and tested everything. Very polite and professional work!',
     },
   });
 
+  // 6. Seed Customer Care Setting
+  await prisma.customerCareSetting.create({
+    data: {
+      settingKey: 'CUSTOMER_CARE_PHONE',
+      settingValue: process.env.CUSTOMER_CARE_PHONE || '+91 80000 12345',
+    },
+  });
+
+  // 7. Seed Worker Rights, Visiting Charges and Safety Policies
+  await prisma.termsAndPolicy.createMany({
+    data: [
+      {
+        policyType: 'WORKER_RIGHTS_PROTECTION',
+        version: 'v1.0',
+        title: 'Kaam Setu Worker Dignity, Rights & Protection Charter',
+        content: `1. Principle of Respect & Dignity: Every trade professional has the absolute right to a safe, non-discriminatory, and harassment-free work environment.
+2. 100% Transparent Visiting Charges: Workers are fully empowered to define their minimum visit/diagnostic fee. No customer may demand a free site visit without prior agreement.
+3. Transparent Quotes & Direct Earnings: What you quote is what you receive. Kaam Setu levies zero hidden platform commissions on your quoted quote.
+4. Autonomous Schedule & Right to Decline: You maintain total freedom to toggle your availability (Online/Offline) and accept or decline any matched job offer without negative algorithmic penalization.
+5. Protection Against Unreasonable Price Slashing: Customers cannot coerce rates lower than your declared base visit fee.
+6. Fair Cancellation & Travel Compensation: In the event of an unexcused last-minute customer cancellation after you have departed ('ON_THE_WAY'), you are entitled to visiting charge coverage.
+7. Grievance Redressal: Workers can raise formal support and safety dispute tickets with 24/7 dedicated review.`,
+        officialReferences: JSON.stringify([
+          { name: 'Ministry of Labour and Employment, Government of India', url: 'https://labour.gov.in/' },
+          { name: 'Code on Social Security, 2020 (Provisions for Platform and Gig Workers)', url: 'https://www.indiacode.nic.in/handle/123456789/15980' },
+          { name: 'Consumer Protection Act, 2019 (E-Commerce Rules)', url: 'https://consumeraffairs.nic.in/' },
+        ]),
+        effectiveDate: new Date('2026-01-01'),
+        active: true,
+      },
+      {
+        policyType: 'VISITING_CHARGES',
+        version: 'v1.0',
+        title: 'Transparent Visiting & Diagnostic Fee Policy',
+        content: `To protect professional travel time, fuel expenses, and on-site expert assessment, all trade pros specify an upfront visiting fee (₹). This fee is fully visible before confirming. If service work commences on-site, the visiting fee is adjustable against the agreed quotation.`,
+        officialReferences: JSON.stringify([
+          { name: 'Consumer Protection (E-Commerce) Rules, 2020', url: 'https://consumeraffairs.nic.in/' }
+        ]),
+        effectiveDate: new Date('2026-01-01'),
+        active: true,
+      },
+      {
+        policyType: 'CUSTOMER_SAFETY',
+        version: 'v1.0',
+        title: 'Customer Safety & Neighborhood Protection Protocol',
+        content: `Kaam Setu provides SOS emergency assistance, up to 3 trusted emergency contacts, mutual 4-digit start OTP verification, and automated safety check-in milestones for home peace-of-mind.`,
+        officialReferences: JSON.stringify([
+          { name: 'National Emergency Response System (112 India)', url: 'https://112.gov.in/' }
+        ]),
+        effectiveDate: new Date('2026-01-01'),
+        active: true,
+      },
+    ],
+  });
+
+  // 8. Seed Customer Emergency Contacts for Aarav Sharma
+  await prisma.customerEmergencyContact.createMany({
+    data: [
+      {
+        customerId: customerAaravProfile.id,
+        name: 'Neha Sharma',
+        relationship: 'Spouse',
+        phone: '+91 98201 98765',
+        phoneLookupHash: 'hash_neha_sharma_9820198765',
+        email: 'neha.sharma@example.com',
+        verificationStatus: 'VERIFIED',
+        isVerified: true,
+        priorityOrder: 1,
+      },
+      {
+        customerId: customerAaravProfile.id,
+        name: 'Rohan Sharma',
+        relationship: 'Brother',
+        phone: '+91 98201 11223',
+        phoneLookupHash: 'hash_rohan_sharma_9820111223',
+        email: 'rohan.sharma@example.com',
+        verificationStatus: 'VERIFIED',
+        isVerified: true,
+        priorityOrder: 2,
+      },
+    ],
+  });
+
+  // 9. Seed Visiting Charges for Trade Workers
+  await prisma.visitingCharge.createMany({
+    data: [
+      {
+        workerId: workerSureshProfile.id,
+        amount: 199.0,
+        isRefundableOrAdjustable: true,
+        terms: 'Includes travel and comprehensive plumbing leak diagnosis. 100% adjusted into final bill if repair is approved.',
+        active: true,
+      },
+      {
+        workerId: workerPriyaProfile.id,
+        amount: 199.0,
+        isRefundableOrAdjustable: true,
+        terms: 'Covers on-site circuit testing and MCB diagnosis. Adjusted against repair invoice.',
+        active: true,
+      },
+      {
+        workerId: workerRajeshProfile.id,
+        amount: 149.0,
+        isRefundableOrAdjustable: true,
+        terms: 'Covers deep cleaning space inspection and material estimate.',
+        active: true,
+      },
+      {
+        workerId: workerAnitaProfile.id,
+        amount: 249.0,
+        isRefundableOrAdjustable: true,
+        terms: 'Includes appliance motor & PCB diagnostic check. Deducted from repair bill if work is authorized.',
+        active: true,
+      },
+    ],
+  });
+
+  // 10. Seed Booking Charge Acknowledgement for completed booking
+  await prisma.bookingChargeAcknowledgement.create({
+    data: {
+      bookingId: completedBooking.id,
+      visitingCharge: 199.0,
+      termsVersion: 'v1.0',
+      customerAcknowledgedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  // 11. Seed Worker Badges (Calculated from verified work history)
+  await prisma.workerBadge.createMany({
+    data: [
+      {
+        workerId: workerSureshProfile.id,
+        badgeCategory: 'EXPERIENCE',
+        badgeType: 'FIRST_JOB',
+        badgeName: 'First Job Completed',
+        badgeDescription: 'Successfully finalized first verified household repair on Kaam Setu',
+        icon: 'Award',
+        eligibilityReference: 'Verified booking #1 completed with 5.0 rating',
+      },
+      {
+        workerId: workerSureshProfile.id,
+        badgeCategory: 'EXPERIENCE',
+        badgeType: 'ON_TIME_PRO',
+        badgeName: 'Punctual Professional',
+        badgeDescription: 'Arrived at the customer premises within the committed ETA',
+        icon: 'Clock',
+        eligibilityReference: 'Arrival logged within 25 minutes of booking acceptance',
+      },
+      {
+        workerId: workerSureshProfile.id,
+        badgeCategory: 'SKILL',
+        badgeType: 'CERTIFIED_PRO',
+        badgeName: 'Certified Master Plumber',
+        badgeDescription: 'Holds verified National Trade Certificate in Plumbing',
+        icon: 'ShieldCheck',
+        eligibilityReference: 'Govt ITI Plumbing Trade License #MH-PL-2016-88',
+      },
+      {
+        workerId: workerPriyaProfile.id,
+        badgeCategory: 'SKILL',
+        badgeType: 'CERTIFIED_PRO',
+        badgeName: 'Licensed Electrician',
+        badgeDescription: 'Certified electrical wiring & circuit protection technician',
+        icon: 'Zap',
+        eligibilityReference: 'Electrical Supervisor License #KA-EL-4912',
+      },
+    ],
+  });
+
+  // 12. Seed Worker Terms Acceptance
+  await prisma.workerTermsAcceptance.createMany({
+    data: [
+      {
+        workerId: workerSureshProfile.id,
+        policyVersion: 'v1.0',
+        policyType: 'WORKER_RIGHTS_PROTECTION',
+        policyReference: 'Kaam Setu Worker Charter v1.0',
+        acceptedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        ipAddress: '127.0.0.1',
+      },
+      {
+        workerId: workerPriyaProfile.id,
+        policyVersion: 'v1.0',
+        policyType: 'WORKER_RIGHTS_PROTECTION',
+        policyReference: 'Kaam Setu Worker Charter v1.0',
+        acceptedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+        ipAddress: '127.0.0.1',
+      },
+    ],
+  });
+
+  // 13. Seed Identity Document & Skill Evidence records
+  await prisma.workerIdentityDocument.create({
+    data: {
+      workerId: workerSureshProfile.id,
+      documentType: 'AADHAAR',
+      secureStorageReference: 'secure://identity/suresh_aadhaar_masked.pdf',
+      maskedIdentifier: 'XXXX-XXXX-4912',
+      verificationStatus: 'VERIFIED',
+      reviewerId: 'ADMIN-SYSTEM',
+      reviewerNotes: 'Verified via Government ID manual credential review.',
+      reviewedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  await prisma.workerSkillEvidence.create({
+    data: {
+      workerId: workerSureshProfile.id,
+      skillCategory: 'plumbing',
+      evidenceType: 'CERTIFICATE',
+      documentTitle: 'ITI National Trade Certificate in Sanitary & Domestic Plumbing',
+      issuingOrganisation: 'Directorate General of Training (DGT), Ministry of Skill Development',
+      issueDate: new Date('2016-06-15'),
+      secureStorageReference: 'secure://skills/suresh_iti_cert.pdf',
+      verificationStatus: 'VERIFIED',
+      reviewerId: 'ADMIN-SYSTEM',
+      reviewerNotes: 'Verified against DGT National Trade Registry.',
+      reviewedAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  // 14. Seed RPL (Recognition of Prior Learning) for Suresh
+  await prisma.workerRPLApplication.create({
+    data: {
+      workerId: workerSureshProfile.id,
+      skillCategory: 'plumbing',
+      yearsOfPriorExperience: 10,
+      evidenceReference: '10 years practical field experience across Mumbai high-rises and residential colonies',
+      assessmentStatus: 'APPROVED',
+      assessmentOrganisation: 'National Skill Development Corporation (NSDC) PMKVY RPL Assessor',
+      assessmentDate: new Date('2023-11-10'),
+      outcome: 'Grade A - Certified Pipe & Pressure Fitting Specialist',
+      reviewerId: 'ADMIN-SYSTEM',
+      reviewerNotes: 'RPL Practical Assessment verified.',
+    },
+  });
+
+  console.log('✅ Seeded Safety, Worker Rights, Visiting Charges, RPL & Badges.');
   console.log('✅ Seeded demo completed job with authentic customer review in INR (₹499).');
   console.log('🎉 Kaam Setu Database Seeding Completed Successfully!');
 }

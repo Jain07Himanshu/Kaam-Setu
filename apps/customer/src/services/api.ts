@@ -197,8 +197,16 @@ export const api = {
       method: 'POST',
     }),
 
-  // Reviews
-  createReview: (payload: { bookingId: string; rating: number; comment: string }) =>
+  // Reviews with Multicategory Rating
+  createReview: (payload: {
+    bookingId: string;
+    rating: number;
+    comment: string;
+    serviceQuality?: number;
+    punctuality?: number;
+    professionalism?: number;
+    communication?: number;
+  }) =>
     request<{ message: string; review: any }>('/reviews', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -217,4 +225,256 @@ export const api = {
     }),
 
   getMySupportTickets: () => request<{ tickets: any[] }>('/support'),
+  getSupportTicketById: (id: string) => request<{ ticket: any }>(`/support/${id}`),
+
+  // Emergency Contacts
+  getEmergencyContacts: () =>
+    request<{ contacts: any[] }>('/customer/emergency-contacts'),
+
+  addEmergencyContact: (payload: {
+    name: string;
+    relationship: string;
+    phone: string;
+    email?: string;
+    priorityOrder?: number;
+  }) =>
+    request<{ message: string; contact: any }>('/customer/emergency-contacts', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  updateEmergencyContact: (
+    id: string,
+    payload: {
+      name?: string;
+      relationship?: string;
+      phone?: string;
+      email?: string;
+      priorityOrder?: number;
+    }
+  ) =>
+    request<{ message: string; contact: any }>(`/customer/emergency-contacts/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  deleteEmergencyContact: (id: string) =>
+    request<{ message: string }>(`/customer/emergency-contacts/${id}`, {
+      method: 'DELETE',
+    }),
+
+  sendContactOtp: (id: string) =>
+    request<{ message: string; simulatedOtp?: string }>(
+      `/customer/emergency-contacts/${id}/send-otp`,
+      { method: 'POST' }
+    ),
+
+  verifyContactOtp: (id: string, otp: string) =>
+    request<{ message: string; contact: any }>(
+      `/customer/emergency-contacts/${id}/verify-otp`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ otp }),
+      }
+    ),
+
+  // Customer Care
+  getCustomerCare: () =>
+    request<{
+      customerCarePhone: string;
+      email: string;
+      hours: string;
+      helplineDirectory: Array<{ name: string; number: string; purpose: string }>;
+      safetyPledge: string;
+    }>('/customer-care/contact'),
+
+  // Duplicate Check
+  checkDuplicate: (payload: { email: string; phone?: string; role?: string; name?: string }) =>
+    request<any>('/registration/check-duplicate', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  // Safety & SOS
+  triggerSos: (payload: {
+    bookingId?: string;
+    latitude?: number;
+    longitude?: number;
+    address?: string;
+    triggerType?: 'SOS' | 'PANIC_BUTTON' | 'MISSED_CHECKIN' | 'SAFETY_ALERT';
+  }) =>
+    request<{
+      message: string;
+      safetyEvent: any;
+      contactsNotifiedCount: number;
+      callLogs: any[];
+      supportTicketId: string;
+      nationalHelplines: any;
+    }>('/safety/sos', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  resolveSos: (id: string, resolutionStatus: 'RESOLVED' | 'CANCELLED', notes: string) =>
+    request<{ message: string; safetyEvent: any }>(`/safety/${id}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ resolutionStatus, notes }),
+    }),
+
+  getMySafetyEvents: () =>
+    request<{ safetyEvents: any[] }>('/customer/safety-events'),
+
+  initCheckin: (bookingId: string, minutesFromNow: number = 30) =>
+    request<{ message: string; checkIn: any }>('/safety/checkin/init', {
+      method: 'POST',
+      body: JSON.stringify({ bookingId, scheduledMinutesFromNow: minutesFromNow }),
+    }),
+
+  acknowledgeCheckin: (id: string) =>
+    request<{ message: string; checkIn: any }>(`/safety/checkin/${id}/acknowledge`, {
+      method: 'POST',
+    }),
+
+  getBookingSafetyStatus: (bookingId: string) =>
+    request<{
+      bookingId: string;
+      hasActiveSos: boolean;
+      safetyEvents: any[];
+      checkIns: any[];
+      emergencyContactsCount: number;
+      emergencyContacts: any[];
+    }>(`/bookings/${bookingId}/safety-status`),
+
+  // Worker Verification & Documents
+  sendWorkerMobileOtp: (phone: string) =>
+    request<{ message: string; simulatedOtp?: string; maskedPhone?: string }>(
+      '/worker/mobile/send-otp',
+      {
+        method: 'POST',
+        body: JSON.stringify({ phone }),
+      }
+    ),
+
+  verifyWorkerMobileOtp: (otp: string) =>
+    request<{ message: string; phone: string; status: string }>(
+      '/worker/mobile/verify-otp',
+      {
+        method: 'POST',
+        body: JSON.stringify({ otp }),
+      }
+    ),
+
+  submitIdentityDocument: (payload: {
+    documentType: string;
+    identifier: string;
+    documentUrl?: string;
+    notes?: string;
+  }) =>
+    request<{ message: string; document: any }>('/worker/verification/identity', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getIdentityDocuments: () =>
+    request<{ documents: any[] }>('/worker/verification/identity'),
+
+  submitSkillEvidence: (payload: {
+    skillCategory: string;
+    evidenceType?: string;
+    documentTitle: string;
+    issuingOrganisation?: string;
+    documentUrl?: string;
+  }) =>
+    request<{ message: string; evidence: any }>('/worker/verification/skills', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getSkillEvidences: () =>
+    request<{ evidences: any[] }>('/worker/verification/skills'),
+
+  getWorkerRightsCharter: () =>
+    request<{
+      policy: any;
+      hasAccepted: boolean;
+      acceptedRecord: any;
+    }>('/worker/terms/rights-charter'),
+
+  acceptWorkerTerms: (policyVersion: string) =>
+    request<{ message: string; acceptance: any }>('/worker/terms/accept', {
+      method: 'POST',
+      body: JSON.stringify({ policyVersion }),
+    }),
+
+  getWorkerVerificationDashboard: () =>
+    request<any>('/worker/verification/dashboard'),
+
+  // Worker RPL & Badges & Credibility
+  submitRplApplication: (payload: {
+    skillCategory: string;
+    yearsOfPriorExperience: number;
+    selfReportedWorkSummary: string;
+    references?: Array<{ name: string; phone: string; relationship: string }>;
+  }) =>
+    request<{ message: string; application: any }>('/worker/rpl/applications', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getWorkerRplStatus: () =>
+    request<{ applications: any[] }>('/worker/rpl/status'),
+
+  getWorkerCredibility: (workerIdOrUserId: string) =>
+    request<any>(`/workers/${workerIdOrUserId}/credibility`),
+
+  // Visiting Charges
+  getMyVisitingCharges: () =>
+    request<any>('/worker/visiting-charges'),
+
+  updateMyVisitingCharges: (payload: {
+    amount: number;
+    isRefundableOrAdjustable: boolean;
+    terms: string;
+  }) =>
+    request<{ message: string; visitingCharge: any }>('/worker/visiting-charges', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
+
+  getWorkerVisitingCharges: (workerIdOrUserId: string) =>
+    request<any>(`/workers/${workerIdOrUserId}/visiting-charges`),
+
+  acknowledgeVisitingCharge: (bookingId: string) =>
+    request<{ message: string; acknowledgement: any }>(
+      `/bookings/${bookingId}/visiting-charge-acknowledgement`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ customerAcknowledgement: true }),
+      }
+    ),
+
+  // Certificate Verification Adapters
+  verifyCertificateQr: (payload: {
+    workerSkillEvidenceId: string;
+    qrData: string;
+    issuingAuthority?: string;
+    certificateNumber?: string;
+  }) =>
+    request<{ message: string; verificationRecord: any }>('/certificates/verify-qr', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  fetchDigilockerCertificate: (payload: {
+    workerSkillEvidenceId: string;
+    consentGiven: true;
+    digilockerDocUri?: string;
+  }) =>
+    request<{ message: string; verificationRecord: any }>('/certificates/digilocker/fetch', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getWorkerCertificates: () =>
+    request<{ certificates: any[] }>('/worker/certificates'),
 };

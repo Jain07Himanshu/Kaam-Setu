@@ -5,7 +5,19 @@ import { AuthenticatedRequest } from '../../middleware/auth.js';
 
 const supportTicketSchema = z.object({
   bookingId: z.string().optional().nullable(),
-  category: z.enum(['GENERAL', 'BOOKING_ISSUE', 'PAYMENT_QUERY', 'SAFETY_REPORT']).default('GENERAL'),
+  category: z.enum([
+    'GENERAL',
+    'BOOKING_ISSUE',
+    'WORKER_BEHAVIOUR',
+    'PRICING_DISPUTE',
+    'CANCELLATION',
+    'PAYMENT_ISSUE',
+    'PAYMENT_QUERY',
+    'SAFETY_CONCERN',
+    'SAFETY_REPORT',
+    'TECHNICAL_PROBLEM',
+    'OTHER',
+  ]).default('GENERAL'),
   subject: z.string().min(5, 'Subject must be at least 5 characters'),
   description: z.string().min(10, 'Please provide more details in the description'),
 });
@@ -54,8 +66,33 @@ export async function getMySupportTickets(req: AuthenticatedRequest, res: Respon
     });
 
     return res.json({ tickets });
-  } catch (error) {
-    console.error('Error fetching tickets:', error);
+  } catch (error: any) {
+    console.error('Get tickets error:', error);
     return res.status(500).json({ error: 'Failed to fetch support tickets' });
+  }
+}
+
+export async function getSupportTicketById(req: AuthenticatedRequest, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { id } = req.params;
+    const ticket = await prisma.supportTicket.findUnique({
+      where: { id },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Support ticket not found.' });
+    }
+
+    if (ticket.userId !== req.user.userId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Access denied to this support ticket.' });
+    }
+
+    return res.json({ ticket });
+  } catch (error: any) {
+    return res.status(500).json({ error: 'Failed to retrieve ticket', details: error.message });
   }
 }

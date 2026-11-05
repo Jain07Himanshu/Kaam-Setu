@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { prisma } from '../../database/prisma.js';
 import { generateToken } from '../../utils/jwt.js';
 import { AuthenticatedRequest } from '../../middleware/auth.js';
+import { normalizeEmail, normalizeIndianPhone } from '../../utils/security.js';
+import { detectDuplicateRegistration, recordDuplicateFlag } from '../duplicateDetection/duplicateDetectionService.js';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -34,13 +36,26 @@ const loginSchema = z.object({
 export async function register(req: Request, res: Response) {
   try {
     const data = registerSchema.parse(req.body);
+    const normalizedEmail = normalizeEmail(data.email);
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email: data.email },
+    let normalizedPhone: string | undefined = undefined;
+    if (data.phone) {
+      try {
+        normalizedPhone = normalizeIndianPhone(data.phone);
+      } catch {
+        normalizedPhone = data.phone.trim();
+      }
+    }
+
+    const duplicateCheck = await detectDuplicateRegistration({
+      email: normalizedEmail,
+      phone: normalizedPhone,
+      role: data.role as any,
+      name: data.name,
     });
 
-    if (existingUser) {
-      return res.status(409).json({ error: 'An account with this email already exists' });
+    if (duplicateCheck.hasDuplicate && !duplicateCheck.canProceed) {
+      return res.status(409).json({ error: duplicateCheck.warningMessage || 'An account with this email already exists' });
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
@@ -49,15 +64,19 @@ export async function register(req: Request, res: Response) {
 
     const user = await prisma.user.create({
       data: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
+        name: data.name.trim(),
+        email: normalizedEmail,
+        phone: normalizedPhone || data.phone,
         role: data.role,
         avatarUrl: defaultAvatar,
         passwordHash,
         status: 'ACTIVE',
       },
     });
+
+    if (duplicateCheck.hasDuplicate && duplicateCheck.canProceed) {
+      await recordDuplicateFlag(user.id, undefined, duplicateCheck.riskLevel, 'PHONE_MATCH');
+    }
 
     let customerProfile = null;
     let workerProfile = null;
@@ -138,6 +157,28 @@ export async function register(req: Request, res: Response) {
           latitude: data.latitude || 19.1176,
           longitude: data.longitude || 72.9060,
           isDefault: true,
+        },
+      });
+
+      // Default visiting charge for worker
+      await prisma.visitingCharge.create({
+        data: {
+          workerId: workerProfile.id,
+          amount: data.baseRate || 199.0,
+          isRefundableOrAdjustable: true,
+          terms: 'Standard visit and diagnostic assessment. 100% adjustable against final service price if booked on-site.',
+          active: true,
+        },
+      });
+
+      // Record worker terms acceptance
+      await prisma.workerTermsAcceptance.create({
+        data: {
+          workerId: workerProfile.id,
+          policyVersion: 'v1.0',
+          policyType: 'WORKER_RIGHTS_PROTECTION',
+          policyReference: 'Kaam Setu Worker Charter v1.0',
+          ipAddress: req.ip || '127.0.0.1',
         },
       });
     }

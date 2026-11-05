@@ -50,9 +50,11 @@ export const Header: React.FC = () => {
     { label: 'Dashboard', path: '/' },
     { label: 'Job Offers', path: '/offers' },
     { label: 'Bookings', path: '/bookings' },
+    { label: 'Verification', path: '/verification' },
+    { label: 'Visiting Fee', path: '/visiting-charges' },
+    { label: 'RPL & Badges', path: '/rpl-and-badges' },
+    { label: 'Rights Charter', path: '/terms-charter' },
     { label: 'Earnings', path: '/earnings' },
-    { label: 'Profile', path: '/profile' },
-    { label: 'Support', path: '/support' },
   ];
 
   return (

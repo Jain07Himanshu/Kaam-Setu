@@ -21,6 +21,15 @@ import * as workersController from './modules/workers/workersController.js';
 import * as notificationsController from './modules/notifications/notificationsController.js';
 import * as reviewsController from './modules/reviews/reviewsController.js';
 import * as supportController from './modules/support/supportController.js';
+import * as emergencyContactsController from './modules/customers/emergencyContactsController.js';
+import * as customerCareController from './modules/customers/customerCareController.js';
+import * as duplicateDetectionController from './modules/duplicateDetection/duplicateDetectionController.js';
+import * as workerVerificationController from './modules/workers/workerVerificationController.js';
+import * as credibilityController from './modules/credibility/credibilityController.js';
+import * as visitingChargesController from './modules/pricing/visitingChargesController.js';
+import * as safetyController from './modules/safety/safetyController.js';
+import * as certificateVerificationController from './modules/certificates/certificateVerificationController.js';
+import * as adminController from './modules/admin/adminController.js';
 
 export function createApp() {
   const app = express();
@@ -95,6 +104,67 @@ export function createApp() {
   // 10. Support Tickets
   app.post('/api/support', authenticate, supportController.createSupportTicket);
   app.get('/api/support', authenticate, supportController.getMySupportTickets);
+  app.get('/api/support/:id', authenticate, supportController.getSupportTicketById);
+
+  // 11. Customer Safety & Care
+  app.get('/api/customer/emergency-contacts', authenticate, emergencyContactsController.getEmergencyContacts);
+  app.post('/api/customer/emergency-contacts', authenticate, emergencyContactsController.createEmergencyContact);
+  app.patch('/api/customer/emergency-contacts/:id', authenticate, emergencyContactsController.updateEmergencyContact);
+  app.delete('/api/customer/emergency-contacts/:id', authenticate, emergencyContactsController.deleteEmergencyContact);
+  app.post('/api/customer/emergency-contacts/:id/send-otp', authenticate, emergencyContactsController.sendContactVerificationOtp);
+  app.post('/api/customer/emergency-contacts/:id/verify-otp', authenticate, emergencyContactsController.verifyContactOtp);
+  app.get('/api/customer-care/contact', customerCareController.getCustomerCareInfo);
+
+  // 12. Duplicate Account Screening
+  app.post('/api/registration/check-duplicate', duplicateDetectionController.checkDuplicate);
+
+  // 13. Worker Mobile OTP & Verifications
+  app.post('/api/worker/mobile/send-otp', authenticate, workerVerificationController.sendWorkerMobileOtp);
+  app.post('/api/worker/mobile/verify-otp', authenticate, workerVerificationController.verifyWorkerMobileOtp);
+  app.post('/api/worker/verification/identity', authenticate, workerVerificationController.submitIdentityDocument);
+  app.get('/api/worker/verification/identity', authenticate, workerVerificationController.getIdentityDocuments);
+  app.post('/api/worker/verification/skills', authenticate, workerVerificationController.submitSkillEvidence);
+  app.get('/api/worker/verification/skills', authenticate, workerVerificationController.getSkillEvidences);
+  app.get('/api/worker/terms/rights-charter', authenticate, workerVerificationController.getCurrentWorkerTerms);
+  app.post('/api/worker/terms/accept', authenticate, workerVerificationController.acceptWorkerTerms);
+  app.get('/api/worker/verification/dashboard', authenticate, workerVerificationController.getWorkerVerificationDashboard);
+
+  // 14. Worker Credibility, Badges & RPL
+  app.post('/api/worker/rpl/applications', authenticate, credibilityController.submitRplApplication);
+  app.get('/api/worker/rpl/status', authenticate, credibilityController.getWorkerRplStatus);
+  app.get('/api/workers/:id/credibility', credibilityController.getWorkerCredibility);
+
+  // 15. Visiting Charges & Callout Policies
+  app.get('/api/workers/:id/visiting-charges', visitingChargesController.getWorkerVisitingChargesById);
+  app.get('/api/worker/visiting-charges', authenticate, visitingChargesController.getMyVisitingCharges);
+  app.patch('/api/worker/visiting-charges', authenticate, visitingChargesController.updateMyVisitingCharges);
+  app.post('/api/bookings/:id/visiting-charge-acknowledgement', authenticate, visitingChargesController.acknowledgeBookingVisitingCharge);
+
+  // 16. Customer Safety & Emergency SOS Engine
+  app.post('/api/safety/sos', authenticate, safetyController.triggerSos);
+  app.post('/api/safety/:id/acknowledge', authenticate, safetyController.resolveSos);
+  app.post('/api/safety/:id/cancel', authenticate, safetyController.resolveSos);
+  app.get('/api/customer/safety-events', authenticate, safetyController.getCustomerSafetyEvents);
+  app.post('/api/safety/checkin/init', authenticate, safetyController.initBookingSafetyCheckin);
+  app.post('/api/safety/checkin/:id/acknowledge', authenticate, safetyController.acknowledgeSafetyCheckin);
+  app.post('/api/safety/checkin/:id/escalate', authenticate, safetyController.escalateSafetyCheckin);
+  app.get('/api/bookings/:id/safety-status', authenticate, safetyController.getBookingSafetyStatus);
+
+  // 17. Certificate Verification Adapters (QR & DigiLocker)
+  app.post('/api/certificates/verify-qr', authenticate, certificateVerificationController.verifyCertificateQr);
+  app.post('/api/certificates/digilocker/fetch', authenticate, certificateVerificationController.fetchDigilockerCertificate);
+  app.get('/api/worker/certificates', authenticate, certificateVerificationController.getWorkerCertificates);
+
+  // 18. Admin Review System
+  app.get('/api/admin/verifications/identity', authenticate, adminController.getPendingIdentityVerifications);
+  app.patch('/api/admin/verifications/identity/:id', authenticate, adminController.reviewIdentityDocument);
+  app.get('/api/admin/verifications/skills', authenticate, adminController.getPendingSkillEvidences);
+  app.patch('/api/admin/verifications/skills/:id', authenticate, adminController.reviewSkillEvidence);
+  app.get('/api/admin/rpl/applications', authenticate, adminController.getPendingRplApplications);
+  app.patch('/api/admin/rpl/applications/:id', authenticate, adminController.reviewRplApplication);
+  app.get('/api/admin/duplicate-flags', authenticate, adminController.getDuplicateFlags);
+  app.patch('/api/admin/duplicate-flags/:id/resolve', authenticate, adminController.resolveDuplicateFlag);
+  app.get('/api/admin/safety/incidents', authenticate, adminController.getSafetyIncidents);
 
   // 11. Statically Serve Unified Frontend Client (Full-Stack Deployment)
   const clientDistPath = path.resolve(__dirname, '../../apps/customer/dist');

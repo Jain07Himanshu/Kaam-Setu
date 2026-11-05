@@ -15,6 +15,10 @@ import { AvailabilityPage } from './pages/AvailabilityPage';
 import { WorkerProfilePage } from './pages/WorkerProfilePage';
 import { WorkerNotificationsPage } from './pages/WorkerNotificationsPage';
 import { WorkerSupportPage } from './pages/WorkerSupportPage';
+import { VerificationCentrePage } from './pages/VerificationCentrePage';
+import { WorkerRightsTermsPage } from './pages/WorkerRightsTermsPage';
+import { VisitingChargesSettingsPage } from './pages/VisitingChargesSettingsPage';
+import { RplAndBadgesPage } from './pages/RplAndBadgesPage';
 
 function AppContent() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -50,6 +54,10 @@ function AppContent() {
             <Route path="/profile" element={<WorkerProfilePage />} />
             <Route path="/notifications" element={<WorkerNotificationsPage />} />
             <Route path="/support" element={<WorkerSupportPage />} />
+            <Route path="/verification" element={<VerificationCentrePage />} />
+            <Route path="/terms-charter" element={<WorkerRightsTermsPage />} />
+            <Route path="/visiting-charges" element={<VisitingChargesSettingsPage />} />
+            <Route path="/rpl-and-badges" element={<RplAndBadgesPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

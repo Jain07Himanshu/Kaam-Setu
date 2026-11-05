@@ -86,3 +86,64 @@ To deploy to a production PostgreSQL database (Supabase, Neon, AWS RDS, Render, 
    npx prisma migrate dev --name init
    npx tsx prisma/seed.ts
    ```
+
+
+---
+
+### Extended Safety, Credibility & Verification Entities:
+
+16. **`CustomerEmergencyContact`**
+    - Trusted emergency contacts (max 3 per customer).
+    - Fields: `id`, `customerId`, `name`, `relationship`, `phone`, `email`, `priority` (1-3), `isVerified`, `verifiedAt`, `createdAt`, `updatedAt`.
+
+17. **`CustomerCareSetting`**
+    - Platform support & emergency helpline configurations.
+    - Fields: `id`, `settingKey` (unique), `settingValue`, `description`, `updatedAt`.
+
+18. **`SafetyEvent`**
+    - Persistent audit trail of SOS triggers and emergency alerts.
+    - Fields: `id`, `customerId`, `bookingId`, `eventType` (`SOS_PANIC` | `SAFETY_CHECKIN_TIMEOUT` | `DISPUTE_ESCALATION`), `status` (`ACTIVE` | `RESOLVED` | `CANCELLED`), `locationLat`, `locationLng`, `notes`, `triggeredAt`, `resolvedAt`, `resolvedBy`.
+
+19. **`SafetyCheckIn`**
+    - Scheduled proactive check-in milestones for active bookings.
+    - Fields: `id`, `bookingId`, `milestoneType` (`WORKER_DEPARTED` | `WORKER_ARRIVED` | `WORK_STARTED` | `OVERDUE_COMPLETION`), `expectedAt`, `status` (`SCHEDULED` | `REMINDER_SENT` | `WARNING_SENT` | `ESCALATED` | `ACKNOWLEDGED`), `escalationStage` (0-3), `acknowledgedAt`, `createdAt`.
+
+20. **`EmergencyCallLog`**
+    - Automated telephony call dispatches to emergency contacts.
+    - Fields: `id`, `safetyEventId`, `recipientPhone`, `recipientName`, `status` (`INITIATED` | `RINGING` | `IN_PROGRESS` | `COMPLETED` | `FAILED`), `callSid`, `provider` (`MOCK` | `TWILIO` | `EXOTEL`), `recordingUrl`, `initiatedAt`, `completedAt`, `errorDetails`.
+
+21. **`WorkerIdentityDocument`**
+    - Government ID verification (Aadhaar, Voter ID, PAN, DL, Passport).
+    - Fields: `id`, `workerId`, `documentType` (`AADHAAR` | `VOTER_ID` | `PAN` | `DRIVING_LICENSE` | `PASSPORT`), `documentIdentifierMasked`, `identifierHash` (SHA-256 for duplicate check), `documentFrontUrl`, `documentBackUrl`, `status` (`PENDING` | `VERIFIED` | `REJECTED`), `reviewerNotes`, `reviewedBy`, `verifiedAt`.
+
+22. **`WorkerSkillEvidence`**
+    - Formal vocational/trade certificates (ITI, NSDC, Skill India, Polytechnic).
+    - Fields: `id`, `workerId`, `tradeCategory`, `certificateName`, `issuingAuthority`, `certificateNumber`, `issueYear`, `documentUrl`, `qrPayload`, `verificationStatus` (`PENDING` | `VERIFIED_BY_ISSUER` | `REJECTED`), `verifiedAt`.
+
+23. **`WorkerTermsAcceptance`**
+    - Timestamped legal acceptance of the Worker Rights & Dignity Charter.
+    - Fields: `id`, `workerId`, `termsVersion`, `acceptedAt`, `ipAddress`, `userAgent`, `legalNoticeCited` ("Code on Social Security 2020").
+
+24. **`WorkerRPLApplication`**
+    - Recognition of Prior Learning portfolio for experienced informal workers.
+    - Fields: `id`, `workerId`, `tradeCategory`, `experienceYears`, `priorLearningSummary`, `referencesJson`, `assessmentStatus` (`SUBMITTED` | `UNDER_REVIEW` | `APPROVED` | `REJECTED`), `reviewerNotes`, `submittedAt`, `reviewedAt`.
+
+25. **`WorkerBadge`**
+    - Genuine, server-computed credibility and milestone badges.
+    - Fields: `id`, `workerId`, `badgeKey` (`FIRST_JOB` | `JOBS_10` | `JOBS_25` | `EXPERIENCED_PRO` | `CERT_*` | `RPL_RECOGNIZED`), `title`, `description`, `icon`, `category` (`EXPERIENCE` | `SKILL_CERTIFICATE` | `RPL` | `SAFETY`), `awardedAt`.
+
+26. **`VisitingCharge`**
+    - Worker-defined diagnostic and callout pricing.
+    - Fields: `id`, `workerId` (unique), `amount` (₹), `isAdjustableAgainstFinalBill` (boolean), `termsDescription`, `updatedAt`.
+
+27. **`BookingChargeAcknowledgement`**
+    - Audit record of customer's explicit pre-booking visiting fee acknowledgement.
+    - Fields: `id`, `bookingId` (unique), `customerId`, `visitingCharge`, `acknowledgedAt`, `ipAddress`.
+
+28. **`CertificateVerificationRecord`**
+    - Cryptographic QR and DigiLocker validation logs.
+    - Fields: `id`, `certificateNumber`, `issuingAuthority`, `verificationMethod` (`QR_CODE` | `DIGILOCKER` | `MANUAL`), `isValid`, `verificationDataJson`, `verifiedAt`.
+
+29. **`DuplicateAccountFlag`**
+    - Risk scoring and audit records for shared identity/device/phone credentials.
+    - Fields: `id`, `userId`, `matchedUserId`, `flagReason`, `riskScore` (`LOW` | `MEDIUM` | `HIGH`), `status` (`PENDING_REVIEW` | `RESOLVED_ALLOWED` | `BLOCKED`), `createdAt`, `resolvedAt`.

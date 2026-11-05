@@ -10,7 +10,12 @@
     "deploy:prod": "node scripts/prepare-prisma.js && prisma db push --skip-generate && tsx prisma/seed.ts && node dist/server.js",
     "prisma:generate": "node scripts/prepare-prisma.js && prisma generate",
     "prisma:push": "node scripts/prepare-prisma.js && prisma db push",
-    "prisma:seed": "node scripts/prepare-prisma.js && tsx prisma/seed.ts"
+    "prisma:seed": "node scripts/prepare-prisma.js && tsx prisma/seed.ts",
+    "test:auth": "tsx src/tests/authRegistration.test.ts",
+    "test:workflow": "tsx src/tests/e2eWorkflow.test.ts",
+    "test:security": "tsx src/tests/securityAndScenarios.test.ts",
+    "test:safety": "tsx src/tests/safetyAndCredibility.test.ts",
+    "test": "tsx src/tests/authRegistration.test.ts && tsx src/tests/e2eWorkflow.test.ts && tsx src/tests/securityAndScenarios.test.ts && tsx src/tests/safetyAndCredibility.test.ts"
   },
   "dependencies": {
     "@hyperlocal/design-tokens": "file:../packages/design-tokens",

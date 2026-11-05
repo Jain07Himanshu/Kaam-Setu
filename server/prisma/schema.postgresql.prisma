@@ -1,11 +1,10 @@
-// PostgreSQL Schema configuration for production deployment
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
 }
 
 model User {
@@ -16,7 +15,7 @@ model User {
   phone        String?
   passwordHash String
   avatarUrl    String?
-  status       String   @default("ACTIVE")
+  status       String   @default("ACTIVE") // ACTIVE, SUSPENDED, PENDING
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -25,9 +24,10 @@ model User {
   serviceLocations ServiceLocation[]
   notifications    Notification[]
   supportTickets   SupportTicket[]
-  givenReviews     Review[]          @relation("GivenReviews")
-  receivedReviews  Review[]          @relation("ReceivedReviews")
+  givenReviews     Review[]              @relation("GivenReviews")
+  receivedReviews  Review[]              @relation("ReceivedReviews")
   auditEvents      AuditEvent[]
+  duplicateFlags   DuplicateAccountFlag[]
 }
 
 model CustomerProfile {
@@ -37,40 +37,48 @@ model CustomerProfile {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobRequests JobRequest[]
-  bookings    Booking[]
+  user              User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobRequests       JobRequest[]
+  bookings          Booking[]
+  emergencyContacts CustomerEmergencyContact[]
+  safetyEvents      SafetyEvent[]
 }
 
 model WorkerProfile {
   id                 String   @id @default(uuid())
   userId             String   @unique
   bio                String?
-  skills             String   @default("[]")
+  skills             String   @default("[]") // JSON string of skills
   serviceRadiusKm    Float    @default(15.0)
   hourlyRate         Float?
   baseRate           Float?
   isAvailable        Boolean  @default(true)
-  onboardingStatus   String   @default("COMPLETED")
+  onboardingStatus   String   @default("COMPLETED") // COMPLETED, IN_PROGRESS, PENDING
   ratingAvg          Float    @default(5.0)
   ratingCount        Int      @default(0)
   completedJobsCount Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  verifications  WorkerVerification[]
-  workerServices WorkerService[]
-  jobOffers      JobOffer[]
-  quotes         Quote[]
-  bookings       Booking[]
+  user              User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verifications     WorkerVerification[]
+  workerServices    WorkerService[]
+  jobOffers         JobOffer[]
+  quotes            Quote[]
+  bookings          Booking[]
+  identityDocuments WorkerIdentityDocument[]
+  skillEvidences    WorkerSkillEvidence[]
+  termsAcceptances  WorkerTermsAcceptance[]
+  rplApplications   WorkerRPLApplication[]
+  badges            WorkerBadge[]
+  visitingCharge    VisitingCharge?
 }
 
 model WorkerVerification {
   id         String    @id @default(uuid())
   workerId   String
-  type       String
-  status     String    @default("VERIFIED")
+  type       String // PHONE, ID_DOCUMENT, SKILL_CERT, BACKGROUND_CHECK
+  status     String    @default("VERIFIED") // VERIFIED, PENDING, REJECTED, NOT_STARTED
   notes      String?
   reviewedAt DateTime?
   createdAt  DateTime  @default(now())
@@ -136,9 +144,9 @@ model JobRequest {
   budgetMin         Float?
   budgetMax         Float?
   isOpenToQuotes    Boolean   @default(true)
-  urgency           String    @default("ASAP")
+  urgency           String    @default("ASAP") // ASAP, SCHEDULED
   scheduledAt       DateTime?
-  status            String    @default("OPEN")
+  status            String    @default("OPEN") // OPEN, MATCHING, OFFERS_RECEIVED, IN_NEGOTIATION, BOOKED, CANCELLED, COMPLETED
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -153,9 +161,9 @@ model JobOffer {
   id           String    @id @default(uuid())
   jobRequestId String
   workerId     String
-  status       String    @default("PENDING")
+  status       String    @default("PENDING") // PENDING, VIEWED, QUOTED, DECLINED, EXPIRED
   matchScore   Float     @default(90.0)
-  matchReasons String    @default("[]")
+  matchReasons String    @default("[]") // JSON string array of reasons
   sentAt       DateTime  @default(now())
   expiresAt    DateTime?
   respondedAt  DateTime?
@@ -176,7 +184,7 @@ model Quote {
   scopeDescription        String
   exclusions              String?
   workerNote              String?
-  status                  String   @default("PENDING")
+  status                  String   @default("PENDING") // PENDING, COUNTEROFFERED, ACCEPTED, REJECTED, EXPIRED
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 
@@ -190,7 +198,7 @@ model QuoteNegotiation {
   id            String   @id @default(uuid())
   quoteId       String
   senderId      String
-  senderRole    String
+  senderRole    String // CUSTOMER, WORKER
   proposedPrice Float
   message       String
   createdAt     DateTime @default(now())
@@ -208,7 +216,7 @@ model Booking {
   agreedScope        String
   scheduledAt        DateTime?
   startOtp           String    @default("4921")
-  status             String    @default("CONFIRMED")
+  status             String    @default("CONFIRMED") // CONFIRMED, ON_THE_WAY, WORK_STARTED, COMPLETED, CANCELLED, DISPUTED
   startedAt          DateTime?
   completedAt        DateTime?
   cancelledAt        DateTime?
@@ -216,20 +224,23 @@ model Booking {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  jobRequest    JobRequest      @relation(fields: [jobRequestId], references: [id], onDelete: Cascade)
-  customer      CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  worker        WorkerProfile   @relation(fields: [workerId], references: [id], onDelete: Cascade)
-  acceptedQuote Quote           @relation(fields: [acceptedQuoteId], references: [id], onDelete: Cascade)
-  review        Review?
+  jobRequest           JobRequest                    @relation(fields: [jobRequestId], references: [id], onDelete: Cascade)
+  customer             CustomerProfile               @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  worker               WorkerProfile                 @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  acceptedQuote        Quote                         @relation(fields: [acceptedQuoteId], references: [id], onDelete: Cascade)
+  review               Review?
+  chargeAcknowledgement BookingChargeAcknowledgement?
+  safetyCheckIns       SafetyCheckIn[]
+  safetyEvents         SafetyEvent[]
 }
 
 model Notification {
   id                String    @id @default(uuid())
   recipientUserId   String
-  type              String
+  type              String // JOB_OFFER_RECEIVED, QUOTE_RECEIVED, SAFETY_ALERT, etc.
   title             String
   message           String
-  relatedEntityType String
+  relatedEntityType String // JOB_REQUEST, QUOTE, BOOKING, SUPPORT_TICKET, SAFETY_EVENT
   relatedEntityId   String
   readAt            DateTime?
   createdAt         DateTime  @default(now())
@@ -238,13 +249,17 @@ model Notification {
 }
 
 model Review {
-  id         String   @id @default(uuid())
-  bookingId  String   @unique
-  reviewerId String
-  revieweeId String
-  rating     Int      @default(5)
-  comment    String
-  createdAt  DateTime @default(now())
+  id              String   @id @default(uuid())
+  bookingId       String   @unique
+  reviewerId      String
+  revieweeId      String
+  rating          Int      @default(5)
+  serviceQuality  Int      @default(5)
+  punctuality     Int      @default(5)
+  professionalism Int      @default(5)
+  communication   Int      @default(5)
+  comment         String
+  createdAt       DateTime @default(now())
 
   booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   reviewer User    @relation("GivenReviews", fields: [reviewerId], references: [id], onDelete: Cascade)
@@ -255,10 +270,10 @@ model SupportTicket {
   id          String   @id @default(uuid())
   userId      String
   bookingId   String?
-  category    String   @default("GENERAL")
+  category    String   @default("GENERAL") // GENERAL, BOOKING_ISSUE, WORKER_BEHAVIOUR, PRICING_DISPUTE, CANCELLATION, PAYMENT_ISSUE, SAFETY_CONCERN, TECHNICAL_PROBLEM, OTHER
   subject     String
   description String
-  status      String   @default("OPEN")
+  status      String   @default("OPEN") // OPEN, UNDER_REVIEW, WAITING_FOR_CUSTOMER, RESOLVED, CLOSED
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -271,8 +286,269 @@ model AuditEvent {
   action     String
   entityType String
   entityId   String
-  metadata   String   @default("{}")
+  metadata   String   @default("{}") // JSON string
   createdAt  DateTime @default(now())
 
   actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+}
+
+// =========================================================================
+// CUSTOMER SAFETY & EMERGENCY RESPONSE SYSTEM
+// =========================================================================
+
+model CustomerEmergencyContact {
+  id                 String   @id @default(uuid())
+  customerId         String
+  name               String
+  relationship       String
+  phone              String // Normalized & masked for storage
+  phoneLookupHash    String // Keyed hash for duplicate lookup
+  email              String?
+  verificationStatus String   @default("UNVERIFIED") // UNVERIFIED, PENDING, VERIFIED
+  isVerified         Boolean  @default(false)
+  priorityOrder      Int      @default(1) // 1, 2, or 3
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  customer CustomerProfile @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+}
+
+model CustomerCareSetting {
+  id           String   @id @default(uuid())
+  settingKey   String   @unique
+  settingValue String
+  updatedAt    DateTime @updatedAt
+}
+
+model SafetyEvent {
+  id             String    @id @default(uuid())
+  customerId     String
+  bookingId      String?
+  eventType      String    @default("SOS") // SOS, MISSED_CHECKIN, SAFETY_ALERT, ADMIN_SAFETY_CHECK
+  severity       String    @default("HIGH") // LOW, MEDIUM, HIGH, CRITICAL
+  status         String    @default("ACTIVE") // ACTIVE, ACKNOWLEDGED, CANCELLED, ESCALATED, RESOLVED
+  locationLat    Float?
+  locationLng    Float?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  acknowledgedAt DateTime?
+  resolvedAt     DateTime?
+
+  customer CustomerProfile    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  booking  Booking?           @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  callLogs EmergencyCallLog[]
+
+  @@index([customerId])
+}
+
+model SafetyCheckIn {
+  id                 String    @id @default(uuid())
+  bookingId          String
+  milestoneType      String    @default("WORKER_ARRIVAL") // WORKER_ARRIVAL, WORK_STARTED, EXPECTED_COMPLETION
+  expectedAt         DateTime
+  gracePeriodMinutes Int       @default(15)
+  acknowledgedAt     DateTime?
+  status             String    @default("SCHEDULED") // SCHEDULED, REMINDER_SENT, WARNING_SENT, ESCALATED, ACKNOWLEDGED, RESOLVED
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+model EmergencyCallLog {
+  id               String    @id @default(uuid())
+  safetyEventId    String
+  contactReference String // Reference or masked phone of emergency contact
+  provider         String    @default("MOCK_TELEPHONY") // MOCK_TELEPHONY, TWILIO, EXOTEL
+  providerCallId   String?
+  callStatus       String    @default("SIMULATED") // QUEUED, INITIATED, IN_PROGRESS, COMPLETED, FAILED, SIMULATED
+  voiceFileUrl     String?
+  attemptNumber    Int       @default(1)
+  notes            String?
+  createdAt        DateTime  @default(now())
+  completedAt      DateTime?
+
+  safetyEvent SafetyEvent @relation(fields: [safetyEventId], references: [id], onDelete: Cascade)
+
+  @@index([safetyEventId])
+}
+
+// =========================================================================
+// WORKER VERIFICATION, RIGHTS & PROTECTION SYSTEM
+// =========================================================================
+
+model WorkerIdentityDocument {
+  id                     String    @id @default(uuid())
+  workerId               String
+  documentType           String // AADHAAR, PASSPORT, VOTER_ID, DRIVING_LICENSE, OTHER
+  secureStorageReference String // Internal document reference path
+  maskedIdentifier       String // e.g. "XXXX-XXXX-1234"
+  verificationStatus     String    @default("SUBMITTED") // NOT_SUBMITTED, SUBMITTED, UNDER_REVIEW, VERIFIED, REJECTED, EXPIRED
+  rejectionReason        String?
+  reviewerId             String?
+  reviewerNotes          String?
+  submittedAt            DateTime  @default(now())
+  reviewedAt             DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  worker WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@index([workerId])
+}
+
+model WorkerSkillEvidence {
+  id                     String    @id @default(uuid())
+  workerId               String
+  skillCategory          String // plumbing, electrical, cleaning, etc.
+  evidenceType           String // CERTIFICATE, TRAINING, EXPERIENCE_LETTER, APPRENTICESHIP, PORTFOLIO, OTHER
+  documentTitle          String
+  issuingOrganisation   String?
+  issueDate              DateTime?
+  expiryDate             DateTime?
+  secureStorageReference String
+  verificationStatus     String    @default("SUBMITTED") // NOT_SUBMITTED, SUBMITTED, UNDER_REVIEW, VERIFIED, REJECTED, ADDITIONAL_INFO_REQUIRED
+  reviewerId             String?
+  reviewerNotes          String?
+  submittedAt            DateTime  @default(now())
+  reviewedAt             DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  worker                     WorkerProfile                @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  certificateVerificationRecords CertificateVerificationRecord[]
+
+  @@index([workerId])
+}
+
+model WorkerTermsAcceptance {
+  id              String   @id @default(uuid())
+  workerId        String
+  policyVersion   String   @default("v1.0")
+  policyType      String   @default("WORKER_RIGHTS_PROTECTION")
+  policyReference String?  // Link to official notification/charter
+  acceptedAt      DateTime @default(now())
+  ipAddress       String?
+
+  worker WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@index([workerId])
+}
+
+model WorkerRPLApplication {
+  id                     String    @id @default(uuid())
+  workerId               String
+  skillCategory          String
+  yearsOfPriorExperience Int       @default(3)
+  evidenceReference      String?   // JSON references or portfolio description
+  assessmentStatus       String    @default("SUBMITTED") // NOT_APPLIED, SUBMITTED, UNDER_REVIEW, ASSESSMENT_REQUIRED, APPROVED, REJECTED
+  assessmentOrganisation String?
+  assessmentDate         DateTime?
+  outcome                String?
+  reviewerId             String?
+  reviewerNotes          String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  worker WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@index([workerId])
+}
+
+model WorkerBadge {
+  id                   String    @id @default(uuid())
+  workerId             String
+  badgeCategory        String // EXPERIENCE, SKILL, CERTIFICATION, RPL
+  badgeType            String // FIRST_JOB, JOBS_10, JOBS_25, JOBS_50, JOBS_100, EXPERIENCED_PRO, ON_TIME_PRO, CONSISTENT_PRO, CERTIFIED_PRO, RPL_RECOGNIZED
+  badgeName            String
+  badgeDescription     String
+  icon                 String    @default("Award")
+  eligibilityReference String // e.g., "Calculated from 12 completed verified bookings"
+  awardedAt            DateTime  @default(now())
+  revokedAt            DateTime?
+
+  worker WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@index([workerId])
+}
+
+// =========================================================================
+// VISITING CHARGES & PRICING TRANSPARENCY
+// =========================================================================
+
+model VisitingCharge {
+  id                       String   @id @default(uuid())
+  workerId                 String   @unique
+  serviceCategoryId        String?
+  amount                   Float    @default(199.0)
+  isRefundableOrAdjustable Boolean  @default(true) // Adjustable against final invoice
+  terms                    String   @default("Standard diagnostic fee. Fully adjustable against final service price if booked on-site.")
+  active                   Boolean  @default(true)
+  updatedAt                DateTime @updatedAt
+
+  worker WorkerProfile @relation(fields: [workerId], references: [id], onDelete: Cascade)
+}
+
+model BookingChargeAcknowledgement {
+  id                     String   @id @default(uuid())
+  bookingId              String   @unique
+  visitingCharge         Float
+  termsVersion           String   @default("v1.0")
+  customerAcknowledgedAt DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+// =========================================================================
+// CERTIFICATE AUTHENTICATION FOUNDATION & REPUTATION
+// =========================================================================
+
+model CertificateVerificationRecord {
+  id                    String    @id @default(uuid())
+  workerSkillEvidenceId String?
+  certificateNumber     String?
+  verificationMethod    String    @default("MANUAL_INSTITUTION") // MANUAL_INSTITUTION, OFFICIAL_API, PUBLIC_PORTAL, QR_CODE, DIGILOCKER, AI_SCREENING
+  issuingAuthority      String
+  verificationReference String?
+  qrData                String?
+  status                String    @default("PENDING") // PENDING, VERIFIED_BY_ISSUER, REJECTED_BY_ISSUER, UNABLE_TO_VERIFY, FLAGGED_FOR_HUMAN_REVIEW
+  reviewerNotes         String?
+  verifiedAt            DateTime?
+  reviewerId            String?
+  createdAt             DateTime  @default(now())
+
+  workerSkillEvidence WorkerSkillEvidence? @relation(fields: [workerSkillEvidenceId], references: [id], onDelete: Cascade)
+}
+
+model DuplicateAccountFlag {
+  id            String    @id @default(uuid())
+  userId        String
+  detectionType String // PHONE_MATCH, EMAIL_MATCH, ID_REFERENCE_MATCH
+  matchedUserId String?
+  riskLevel     String    @default("LOW") // LOW, MEDIUM, HIGH
+  status        String    @default("FLAGGED") // FLAGGED, UNDER_REVIEW, RESOLVED_LEGITIMATE, RESOLVED_DUPLICATE
+  reviewNotes   String?
+  reviewedBy    String?
+  createdAt     DateTime  @default(now())
+  reviewedAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model TermsAndPolicy {
+  id                 String   @id @default(uuid())
+  policyType         String   @unique // WORKER_RIGHTS_PROTECTION, VISITING_CHARGES, CUSTOMER_SAFETY
+  version            String   @default("v1.0")
+  title              String
+  content            String
+  officialReferences String   @default("[]") // JSON string of legal and government links
+  effectiveDate      DateTime @default(now())
+  active             Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
 }
