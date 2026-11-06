@@ -45,6 +45,38 @@ export const NotificationToast: React.FC = () => {
         link: '/bookings',
         type: 'booking',
       });
+    } else if (lastEvent.type === 'booking.safety.alert.created') {
+      setToast({
+        id: Date.now().toString(),
+        title: '⚠️ Safety Check-in Alarm Active',
+        message: 'The expected duration has expired. Customer safety check-in prompt active.',
+        link: '/bookings',
+        type: 'offer',
+      });
+    } else if (lastEvent.type === 'booking.timer.extension.approved') {
+      setToast({
+        id: Date.now().toString(),
+        title: 'Extension Approved! ✅',
+        message: 'Customer approved your additional work time request.',
+        link: '/bookings',
+        type: 'booking',
+      });
+    } else if (lastEvent.type === 'booking.timer.extension.rejected') {
+      setToast({
+        id: Date.now().toString(),
+        title: 'Extension Request Declined ❌',
+        message: 'Customer rejected the additional work time request.',
+        link: '/bookings',
+        type: 'counter',
+      });
+    } else if (lastEvent.type === 'booking.safety.alert.acknowledged') {
+      setToast({
+        id: Date.now().toString(),
+        title: 'Customer Safe Confirmed 👍',
+        message: 'Customer confirmed safe. You may set a new expected work duration.',
+        link: '/bookings',
+        type: 'booking',
+      });
     }
   }, [lastEvent]);
 

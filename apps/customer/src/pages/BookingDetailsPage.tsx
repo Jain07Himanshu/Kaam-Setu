@@ -21,7 +21,12 @@ import {
   Heart,
   MessageSquare,
   ThumbsUp,
+  Hourglass,
+  Bell,
+  Volume2,
 } from 'lucide-react';
+import { WorkerCredibilityCard } from '../components/WorkerCredibilityCard';
+import { playSafetyAlarmSound, stopSafetyAlarmSound } from '../utils/alarmSound';
 
 export const BookingDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,8 +35,13 @@ export const BookingDetailsPage: React.FC = () => {
   const [booking, setBooking] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Safety & Check-in state
+  // Safety & Work Timer state
   const [safetyStatus, setSafetyStatus] = useState<any | null>(null);
+  const [timerData, setTimerData] = useState<any | null>(null);
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+  const [isAlarmActive, setIsAlarmActive] = useState(false);
+  const [isAcknowledgingSafe, setIsAcknowledgingSafe] = useState(false);
+  const [respondingToExtension, setRespondingToExtension] = useState(false);
   const [isTriggeringSos, setIsTriggeringSos] = useState(false);
   const [sosSuccessMsg, setSosSuccessMsg] = useState<string | null>(null);
 
@@ -64,6 +74,19 @@ export const BookingDetailsPage: React.FC = () => {
       const safetyRes = await api.getBookingSafetyStatus(id).catch(() => null);
       if (safetyRes) setSafetyStatus(safetyRes);
 
+      // Fetch work timer status
+      const timerRes = await api.getBookingTimerStatus(id).catch(() => null);
+      if (timerRes) {
+        setTimerData(timerRes);
+        if (timerRes.hasActiveAlarm) {
+          setIsAlarmActive(true);
+          playSafetyAlarmSound();
+        } else {
+          setIsAlarmActive(false);
+          stopSafetyAlarmSound();
+        }
+      }
+
       // Fetch visiting charge terms
       if (res.booking?.workerId) {
         const chargeRes = await api.getWorkerVisitingCharges(res.booking.workerId).catch(() => null);
@@ -83,6 +106,7 @@ export const BookingDetailsPage: React.FC = () => {
     }
     return () => {
       if (id) leaveBookingRoom(id);
+      stopSafetyAlarmSound();
     };
   }, [id]);
 
@@ -95,8 +119,45 @@ export const BookingDetailsPage: React.FC = () => {
       lastEvent.payload.bookingId === booking.id
     ) {
       setBooking(lastEvent.payload.booking);
+      fetchBooking();
+    } else if (
+      lastEvent.type === 'booking.timer.started' ||
+      lastEvent.type === 'booking.timer.expired' ||
+      lastEvent.type === 'booking.safety.alert.created' ||
+      lastEvent.type === 'booking.timer.extension.requested' ||
+      lastEvent.type === 'booking.timer.extension.approved' ||
+      lastEvent.type === 'booking.timer.extension.rejected' ||
+      lastEvent.type === 'booking.safety.alert.acknowledged' ||
+      lastEvent.type === 'booking.safety.escalated'
+    ) {
+      fetchBooking();
     }
   }, [lastEvent]);
+
+  // 1-second countdown interval
+  useEffect(() => {
+    if (!timerData?.currentTimer || timerData.currentTimer.status !== 'ACTIVE') {
+      setRemainingSeconds(null);
+      return;
+    }
+
+    const target = new Date(timerData.currentTimer.expectedCompletionAt).getTime();
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const diffSec = Math.floor((target - now) / 1000);
+      if (diffSec <= 0) {
+        setRemainingSeconds(0);
+        fetchBooking();
+      } else {
+        setRemainingSeconds(diffSec);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [timerData?.currentTimer]);
 
   const handleAcknowledgeVisitingCharge = async () => {
     if (!booking) return;
@@ -141,6 +202,36 @@ export const BookingDetailsPage: React.FC = () => {
       alert('Thank you! Confirmed you are safe and sound.');
     } catch (err: any) {
       alert(err.message || 'Failed to confirm check-in');
+    }
+  };
+
+  const handleAcknowledgeSafe = async () => {
+    if (!booking) return;
+    setIsAcknowledgingSafe(true);
+    stopSafetyAlarmSound();
+    setIsAlarmActive(false);
+
+    try {
+      await api.acknowledgeSafe(booking.id);
+      fetchBooking();
+    } catch (err: any) {
+      alert(err.message || 'Failed to acknowledge safety check-in');
+    } finally {
+      setIsAcknowledgingSafe(false);
+    }
+  };
+
+  const handleRespondToExtension = async (extensionId: string, action: 'APPROVE' | 'REJECT') => {
+    if (!booking) return;
+    setRespondingToExtension(true);
+
+    try {
+      await api.respondToTimerExtension(booking.id, extensionId, action);
+      fetchBooking();
+    } catch (err: any) {
+      alert(err.message || 'Failed to respond to extension request');
+    } finally {
+      setRespondingToExtension(false);
     }
   };
 
@@ -294,6 +385,142 @@ export const BookingDetailsPage: React.FC = () => {
             );
           })}
         </div>
+      </div>
+
+      {/* ACTIVE WORK TIMER & SAFETY MONITORING (When In Progress) */}
+      {booking.status === 'WORK_STARTED' && (
+        <div className="bg-white rounded-3xl border-2 border-brand-primary/40 shadow-md p-6 sm:p-8 space-y-5 animate-in fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-brand-primary text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Hourglass className="w-6 h-6 text-brand-cream animate-pulse" />
+              </div>
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  SERVICE IN PROGRESS · TIMER ACTIVE
+                </span>
+                <h3 className="text-xl font-extrabold text-charcoal mt-1">Live Service Work Timer</h3>
+              </div>
+            </div>
+
+            {timerData?.currentTimer && (
+              <div className="text-right sm:text-right">
+                <span className="text-[10px] font-bold text-gray-400 block uppercase">Time Remaining</span>
+                <span
+                  className={`text-3xl font-black tracking-widest ${
+                    remainingSeconds !== null && remainingSeconds <= 300
+                      ? 'text-red-600 animate-pulse'
+                      : 'text-brand-primary'
+                  }`}
+                >
+                  {remainingSeconds !== null && remainingSeconds > 0
+                    ? `${Math.floor(remainingSeconds / 3600).toString().padStart(2, '0')}:${Math.floor((remainingSeconds % 3600) / 60).toString().padStart(2, '0')}:${(remainingSeconds % 60).toString().padStart(2, '0')}`
+                    : '00:00:00'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {timerData?.currentTimer && (
+            <div className="p-4 rounded-2xl bg-brand-surface border border-brand-secondary/40 text-xs text-brand-primaryDark flex items-center gap-2">
+              <Clock className="w-4 h-4 text-brand-primary shrink-0" />
+              <span>
+                Your service professional <strong>{booking.worker?.user?.name}</strong> has started working. The expected completion time is{' '}
+                <strong>
+                  {new Date(timerData.currentTimer.expectedCompletionAt).toLocaleTimeString('en-IN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                  })}
+                </strong>.
+              </span>
+            </div>
+          )}
+
+          {/* Pending Worker Extension Request Approval Card */}
+          {timerData?.pendingExtension && (
+            <div className="p-5 rounded-2xl bg-blue-50 border-2 border-blue-300 shadow-sm space-y-3">
+              <div className="flex items-center gap-2 text-blue-900 font-extrabold text-xs uppercase tracking-wider">
+                <Clock className="w-4 h-4 text-blue-600" />
+                <span>Worker Requested Additional Time</span>
+              </div>
+              <p className="text-xs text-blue-950 leading-relaxed">
+                Your service professional has requested an additional{' '}
+                <strong>{timerData.pendingExtension.additionalMinutes} minutes</strong> to complete the work.
+              </p>
+              <div className="grid grid-cols-2 gap-2 text-xs bg-white/80 p-3 rounded-xl border border-blue-200">
+                <div>
+                  <span className="text-gray-400 text-[10px] block">Reason for Extension:</span>
+                  <span className="font-bold text-charcoal">{timerData.pendingExtension.reason}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 text-[10px] block">New Proposed Completion:</span>
+                  <span className="font-bold text-brand-primary">
+                    {new Date(timerData.pendingExtension.proposedCompletionAt).toLocaleTimeString('en-IN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true,
+                    })}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleRespondToExtension(timerData.pendingExtension.id, 'REJECT')}
+                  disabled={respondingToExtension}
+                  className="px-4 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 font-bold text-xs transition"
+                >
+                  REJECT EXTENSION
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRespondToExtension(timerData.pendingExtension.id, 'APPROVE')}
+                  disabled={respondingToExtension}
+                  className="px-5 py-2 rounded-xl bg-brand-primary hover:bg-brand-primaryDark text-white font-bold text-xs shadow-sm transition"
+                >
+                  APPROVE EXTENSION
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* AUTOMATIC SOS ESCALATION STATUS (When unacknowledged timer expires) */}
+      {timerData?.isEscalated && (
+        <div className="p-6 rounded-3xl bg-red-600 text-white shadow-xl space-y-3 animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-white text-red-600 flex items-center justify-center font-bold">
+              <AlertOctagon className="w-7 h-7 animate-bounce" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider bg-red-800 text-white px-2.5 py-0.5 rounded-full">
+                EMERGENCY ESCALATION ACTIVE
+              </span>
+              <h3 className="text-xl font-black text-white mt-0.5">
+                Automated Safety Protocol Escalated
+              </h3>
+            </div>
+          </div>
+          <p className="text-xs text-red-100 leading-relaxed">
+            The service work duration expired without confirmation. Outbound calls and urgent SMS alerts have been placed to your registered emergency contacts, and the Kaam Setu Rapid Safety Response team has been alerted.
+          </p>
+          <div className="pt-2 flex items-center justify-between border-t border-red-500/60 text-xs">
+            <span className="text-red-200">If this was a false alarm, you can resolve the alert:</span>
+            <button
+              onClick={() => handleTriggerBookingSos()}
+              className="px-4 py-2 bg-white text-red-700 hover:bg-red-50 font-black rounded-xl text-xs transition shadow-sm"
+            >
+              Resolve / I Am Safe Now
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* UNLOCKED SECTION: YOUR SERVICE PROFESSIONAL (Accessible throughout active booking & after completion) */}
+      <div className="space-y-3">
+        <WorkerCredibilityCard workerId={booking.workerId} />
       </div>
 
       {/* Active Service Safety Card (SOS Button & Check-In Milestones) */}

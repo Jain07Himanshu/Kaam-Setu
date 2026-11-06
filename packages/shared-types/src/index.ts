@@ -143,7 +143,16 @@ export interface Quote {
   id: string;
   jobRequestId: string;
   workerId: string;
-  proposedPrice: number;
+  proposedPrice: number; // Total estimated amount
+  visitingCharge?: number;
+  serviceCharge?: number;
+  additionalCharges?: number;
+  isVisitingRefundableOrAdjustable?: boolean;
+  visitingChargeTerms?: string | null;
+  isFinalPriceEstimated?: boolean;
+  termsVersion?: string;
+  customerAcknowledgedAt?: string | null;
+  acknowledgedVisitingCharge?: number | null;
   estimatedArrivalMinutes: number;
   scopeDescription: string;
   exclusions?: string | null;
@@ -247,6 +256,39 @@ export interface SupportTicket {
   user?: User;
 }
 
+export type WorkTimerStatus = 'ACTIVE' | 'EXPIRED' | 'ACKNOWLEDGED' | 'EXTENDED' | 'COMPLETED' | 'CANCELLED';
+
+export interface WorkTimer {
+  id: string;
+  bookingId: string;
+  workerId: string;
+  customerId: string;
+  startedAt: string;
+  expectedDurationMinutes: number;
+  expectedCompletionAt: string;
+  status: WorkTimerStatus;
+  acknowledgedAt?: string | null;
+  cycleNumber: number;
+  createdAt: string;
+  updatedAt: string;
+  extensionRequests?: TimerExtensionRequest[];
+}
+
+export type ExtensionRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
+
+export interface TimerExtensionRequest {
+  id: string;
+  bookingId: string;
+  timerId: string;
+  requestedBy: string;
+  additionalMinutes: number;
+  reason: string;
+  proposedCompletionAt: string;
+  status: ExtensionRequestStatus;
+  requestedAt: string;
+  respondedAt?: string | null;
+}
+
 // Socket Events
 export interface SocketEventPayloads {
   'job.created': { jobRequest: JobRequest };
@@ -259,6 +301,16 @@ export interface SocketEventPayloads {
   'booking.confirmed': { booking: Booking };
   'booking.status.updated': { bookingId: string; status: BookingStatus; booking: Booking };
   'booking.cancelled': { bookingId: string; reason?: string };
+  'booking.work.started': { bookingId: string; startedAt: string };
+  'booking.timer.started': { bookingId: string; timer: WorkTimer };
+  'booking.timer.expiring': { bookingId: string; remainingMinutes: number };
+  'booking.timer.expired': { bookingId: string; timerId: string };
+  'booking.timer.extension.requested': { bookingId: string; extension: TimerExtensionRequest };
+  'booking.timer.extension.approved': { bookingId: string; timer: WorkTimer; extension: TimerExtensionRequest };
+  'booking.timer.extension.rejected': { bookingId: string; extensionId: string };
+  'booking.safety.alert.created': { bookingId: string; timerId: string; gracePeriodMinutes: number };
+  'booking.safety.alert.acknowledged': { bookingId: string; timerId: string };
+  'booking.safety.escalated': { bookingId: string; safetyEventId: string };
   'notification.created': { notification: Notification };
   'worker.availability.changed': { workerId: string; isAvailable: boolean };
 }

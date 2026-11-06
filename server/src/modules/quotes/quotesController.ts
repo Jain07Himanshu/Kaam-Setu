@@ -10,7 +10,13 @@ import {
 
 const quoteSchema = z.object({
   jobRequestId: z.string().min(1),
-  proposedPrice: z.number().positive('Proposed price must be positive'),
+  proposedPrice: z.number().positive('Proposed price must be positive').optional(),
+  visitingCharge: z.number().min(0, 'Visiting charge cannot be negative').default(150),
+  serviceCharge: z.number().min(0, 'Service charge cannot be negative').default(0),
+  additionalCharges: z.number().min(0, 'Additional charges cannot be negative').default(0),
+  isVisitingRefundableOrAdjustable: z.boolean().default(true),
+  visitingChargeTerms: z.string().optional().nullable(),
+  isFinalPriceEstimated: z.boolean().default(false),
   estimatedArrivalMinutes: z.number().int().min(5).default(30),
   scopeDescription: z.string().min(5, 'Scope description is required'),
   exclusions: z.string().optional().nullable(),
@@ -20,6 +26,14 @@ const quoteSchema = z.object({
 const counterofferSchema = z.object({
   proposedPrice: z.number().positive('Counter proposed price must be positive'),
   message: z.string().min(3, 'Message is required for a counteroffer'),
+});
+
+const acceptQuoteSchema = z.object({
+  acknowledgedVisitingCharge: z.number().min(0, 'Acknowledged visiting charge is required'),
+  confirmedAcknowledgement: z.literal(true, {
+    errorMap: () => ({ message: 'You must confirm and acknowledge the visiting charge policy' }),
+  }),
+  termsVersion: z.string().default('v1.0'),
 });
 
 export async function createQuote(req: AuthenticatedRequest, res: Response) {
@@ -57,11 +71,26 @@ export async function createQuote(req: AuthenticatedRequest, res: Response) {
       return res.status(409).json({ error: 'You have already submitted a quote for this job request' });
     }
 
+    const visitingCharge = data.visitingCharge !== undefined ? data.visitingCharge : 150;
+    const serviceCharge = data.serviceCharge !== undefined ? data.serviceCharge : (data.proposedPrice ? Math.max(0, data.proposedPrice - visitingCharge) : 0);
+    const additionalCharges = data.additionalCharges || 0;
+    const calculatedTotal = visitingCharge + serviceCharge + additionalCharges;
+    const finalProposedPrice = data.proposedPrice && data.proposedPrice > 0 ? data.proposedPrice : (calculatedTotal > 0 ? calculatedTotal : 150);
+
     const quote = await prisma.quote.create({
       data: {
         jobRequestId: data.jobRequestId,
         workerId: req.workerProfileId,
-        proposedPrice: data.proposedPrice,
+        proposedPrice: finalProposedPrice,
+        visitingCharge,
+        serviceCharge,
+        additionalCharges,
+        isVisitingRefundableOrAdjustable: data.isVisitingRefundableOrAdjustable ?? true,
+        visitingChargeTerms: data.visitingChargeTerms || '₹150 inspection charge upon arrival. 100% deducted from total service invoice if work proceeds.',
+        isFinalPriceEstimated: data.isFinalPriceEstimated ?? false,
+        termsVersion: 'v1.0',
+        customerAcknowledgedAt: null,
+        acknowledgedVisitingCharge: null,
         estimatedArrivalMinutes: data.estimatedArrivalMinutes,
         scopeDescription: data.scopeDescription,
         exclusions: data.exclusions,
@@ -185,12 +214,14 @@ export async function counterofferQuote(req: AuthenticatedRequest, res: Response
       },
     });
 
-    // Update quote proposed price & status to COUNTEROFFERED
+    // Update quote proposed price & status to COUNTEROFFERED and reset customer acknowledgement
     const updatedQuote = await prisma.quote.update({
       where: { id: quote.id },
       data: {
         status: 'COUNTEROFFERED',
         proposedPrice,
+        customerAcknowledgedAt: null,
+        acknowledgedVisitingCharge: null,
       },
       include: {
         worker: {
@@ -282,20 +313,45 @@ export async function acceptQuote(req: AuthenticatedRequest, res: Response) {
       return res.status(409).json({ error: 'A quote has already been accepted for this job request' });
     }
 
+    // Validate Visiting Charge Acknowledgement
+    const validationResult = acceptQuoteSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({
+        error: 'Mandatory Visiting Charge Acknowledgement required: Please confirm you have read and understood the visiting charges and conditions before accepting this quotation.',
+        details: validationResult.error.errors,
+      });
+    }
+
+    const { acknowledgedVisitingCharge, termsVersion } = validationResult.data;
+
+    // Verify acknowledged visiting charge matches the quotation
+    if (Math.abs(acknowledgedVisitingCharge - quote.visitingCharge) > 0.01) {
+      return res.status(400).json({
+        error: `Quotation terms mismatch. The quotation visiting fee is ₹${quote.visitingCharge}, but ₹${acknowledgedVisitingCharge} was acknowledged. Please review the updated quotation.`,
+      });
+    }
+
     // Generate a secure 4-digit start OTP
     const startOtp = Math.floor(1000 + Math.random() * 9000).toString();
 
     // Use Prisma Transaction to ensure atomic consistency:
-    // 1. Mark accepted quote ACCEPTED
+    // 1. Mark accepted quote ACCEPTED with acknowledgement timestamp
     // 2. Reject all competing quotes for this job request
     // 3. Create single Booking record
-    // 4. Update JobRequest status to BOOKED
-    const [acceptedQuote, booking] = await prisma.$transaction([
-      prisma.quote.update({
+    // 4. Create BookingChargeAcknowledgement record linked to booking & quote
+    // 5. Update JobRequest status to BOOKED
+    const result = await prisma.$transaction(async (tx) => {
+      const acceptedQuote = await tx.quote.update({
         where: { id: quote.id },
-        data: { status: 'ACCEPTED' },
-      }),
-      prisma.booking.create({
+        data: {
+          status: 'ACCEPTED',
+          customerAcknowledgedAt: new Date(),
+          acknowledgedVisitingCharge: quote.visitingCharge,
+          termsVersion,
+        },
+      });
+
+      const booking = await tx.booking.create({
         data: {
           jobRequestId: quote.jobRequestId,
           customerId: quote.jobRequest.customerId,
@@ -318,21 +374,39 @@ export async function acceptQuote(req: AuthenticatedRequest, res: Response) {
             },
           },
         },
-      }),
-      // Reject competing quotes
-      prisma.quote.updateMany({
+      });
+
+      await tx.bookingChargeAcknowledgement.create({
+        data: {
+          bookingId: booking.id,
+          quotationId: quote.id,
+          visitingCharge: quote.visitingCharge,
+          serviceCharge: quote.serviceCharge,
+          totalQuotationAmount: quote.proposedPrice,
+          isRefundableOrAdjustable: quote.isVisitingRefundableOrAdjustable,
+          terms: quote.visitingChargeTerms || 'Standard diagnostic inspection fee. Deducted from final service bill upon hire.',
+          termsVersion,
+          customerAcknowledgedAt: new Date(),
+        },
+      });
+
+      await tx.quote.updateMany({
         where: {
           jobRequestId: quote.jobRequestId,
           id: { not: quote.id },
         },
         data: { status: 'REJECTED' },
-      }),
-      // Mark job as BOOKED
-      prisma.jobRequest.update({
+      });
+
+      await tx.jobRequest.update({
         where: { id: quote.jobRequestId },
         data: { status: 'BOOKED' },
-      }),
-    ]);
+      });
+
+      return { acceptedQuote, booking };
+    });
+
+    const { acceptedQuote, booking } = result;
 
     // Real-time events
     emitToJob(quote.jobRequestId, 'quote.accepted', {

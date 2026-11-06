@@ -126,9 +126,10 @@ export const api = {
       body: JSON.stringify(payload),
     }),
 
-  acceptQuote: (quoteId: string) =>
+  acceptQuote: (quoteId: string, payload?: { acknowledgedVisitingCharge: number; confirmedAcknowledgement: boolean; termsVersion?: string }) =>
     request<{ message: string; booking: any; acceptedQuote: any }>(`/quotes/${quoteId}/accept`, {
       method: 'POST',
+      body: payload ? JSON.stringify(payload) : undefined,
     }),
 
   rejectQuote: (quoteId: string) =>
@@ -139,7 +140,13 @@ export const api = {
   // Worker Bidding / Quotes
   createQuote: (payload: {
     jobRequestId: string;
-    proposedPrice: number;
+    proposedPrice?: number;
+    visitingCharge?: number;
+    serviceCharge?: number;
+    additionalCharges?: number;
+    isVisitingRefundableOrAdjustable?: boolean;
+    visitingChargeTerms?: string;
+    isFinalPriceEstimated?: boolean;
     estimatedArrivalMinutes: number;
     scopeDescription: string;
     exclusions?: string;
@@ -359,6 +366,39 @@ export const api = {
       emergencyContactsCount: number;
       emergencyContacts: any[];
     }>(`/bookings/${bookingId}/safety-status`),
+
+  // Advanced Work Timer & Automatic SOS Escalation
+  startWorkTimer: (bookingId: string, payload: { hours?: number; minutes?: number; durationMinutes?: number; gracePeriodMinutes?: number }) =>
+    request<{ message: string; timer: any; safetyCheckIn: any }>(`/bookings/${bookingId}/work-timer/start`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getBookingTimerStatus: (bookingId: string) =>
+    request<any>(`/bookings/${bookingId}/work-timer`),
+
+  requestTimerExtension: (bookingId: string, payload: { additionalHours?: number; additionalMinutes?: number; totalAdditionalMinutes?: number; reason: string }) =>
+    request<{ message: string; extension: any }>(`/bookings/${bookingId}/work-timer/request-extension`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  respondToTimerExtension: (bookingId: string, extensionId: string, action: 'APPROVE' | 'REJECT') =>
+    request<{ message: string; extension: any; timer?: any }>(`/bookings/${bookingId}/work-timer/extension/${extensionId}/respond`, {
+      method: 'POST',
+      body: JSON.stringify({ action }),
+    }),
+
+  acknowledgeSafe: (bookingId: string) =>
+    request<{ message: string; success: boolean; acknowledgedAt: string }>(`/bookings/${bookingId}/work-timer/acknowledge-safe`, {
+      method: 'POST',
+    }),
+
+  resetTimerCycle: (bookingId: string, payload: { hours?: number; minutes?: number; durationMinutes?: number }) =>
+    request<{ message: string; timer: any; safetyCheckIn: any }>(`/bookings/${bookingId}/work-timer/reset-cycle`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 
   // Worker Verification & Documents
   sendWorkerMobileOtp: (phone: string) =>

@@ -42,6 +42,7 @@ model CustomerProfile {
   bookings          Booking[]
   emergencyContacts CustomerEmergencyContact[]
   safetyEvents      SafetyEvent[]
+  workTimers        WorkTimer[]
 }
 
 model WorkerProfile {
@@ -72,6 +73,7 @@ model WorkerProfile {
   rplApplications   WorkerRPLApplication[]
   badges            WorkerBadge[]
   visitingCharge    VisitingCharge?
+  workTimers        WorkTimer[]
 }
 
 model WorkerVerification {
@@ -176,17 +178,26 @@ model JobOffer {
 }
 
 model Quote {
-  id                      String   @id @default(uuid())
-  jobRequestId            String
-  workerId                String
-  proposedPrice           Float
-  estimatedArrivalMinutes Int      @default(30)
-  scopeDescription        String
-  exclusions              String?
-  workerNote              String?
-  status                  String   @default("PENDING") // PENDING, COUNTEROFFERED, ACCEPTED, REJECTED, EXPIRED
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  id                              String   @id @default(uuid())
+  jobRequestId                    String
+  workerId                        String
+  proposedPrice                   Float    // Total estimated amount
+  visitingCharge                  Float    @default(150.0)
+  serviceCharge                   Float    @default(0.0)
+  additionalCharges               Float    @default(0.0)
+  isVisitingRefundableOrAdjustable Boolean  @default(true)
+  visitingChargeTerms             String?
+  isFinalPriceEstimated           Boolean  @default(false)
+  termsVersion                    String   @default("v1.0")
+  customerAcknowledgedAt          DateTime?
+  acknowledgedVisitingCharge      Float?
+  estimatedArrivalMinutes         Int      @default(30)
+  scopeDescription                String
+  exclusions                      String?
+  workerNote                      String?
+  status                          String   @default("PENDING") // PENDING, COUNTEROFFERED, ACCEPTED, REJECTED, EXPIRED
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime @updatedAt
 
   jobRequest   JobRequest         @relation(fields: [jobRequestId], references: [id], onDelete: Cascade)
   worker       WorkerProfile      @relation(fields: [workerId], references: [id], onDelete: Cascade)
@@ -232,6 +243,8 @@ model Booking {
   chargeAcknowledgement BookingChargeAcknowledgement?
   safetyCheckIns       SafetyCheckIn[]
   safetyEvents         SafetyEvent[]
+  workTimers           WorkTimer[]
+  timerExtensions      TimerExtensionRequest[]
 }
 
 model Notification {
@@ -346,17 +359,65 @@ model SafetyEvent {
 model SafetyCheckIn {
   id                 String    @id @default(uuid())
   bookingId          String
-  milestoneType      String    @default("WORKER_ARRIVAL") // WORKER_ARRIVAL, WORK_STARTED, EXPECTED_COMPLETION
+  timerId            String?
+  milestoneType      String    @default("EXPECTED_COMPLETION") // WORKER_ARRIVAL, WORK_STARTED, EXPECTED_COMPLETION
   expectedAt         DateTime
-  gracePeriodMinutes Int       @default(15)
+  alertTriggeredAt   DateTime?
+  gracePeriodMinutes Int       @default(2)
   acknowledgedAt     DateTime?
-  status             String    @default("SCHEDULED") // SCHEDULED, REMINDER_SENT, WARNING_SENT, ESCALATED, ACKNOWLEDGED, RESOLVED
+  status             String    @default("SCHEDULED") // SCHEDULED, ALERT_TRIGGERED, REMINDER_SENT, WARNING_SENT, ESCALATED, ACKNOWLEDGED, RESOLVED
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking   Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  workTimer WorkTimer? @relation(fields: [timerId], references: [id], onDelete: SetNull)
 
   @@index([bookingId])
+  @@index([timerId])
+}
+
+model WorkTimer {
+  id                      String    @id @default(uuid())
+  bookingId               String
+  workerId                String
+  customerId              String
+  startedAt               DateTime  @default(now())
+  expectedDurationMinutes Int
+  expectedCompletionAt    DateTime
+  status                  String    @default("ACTIVE") // ACTIVE, EXPIRED, ACKNOWLEDGED, EXTENDED, COMPLETED, CANCELLED
+  acknowledgedAt          DateTime?
+  cycleNumber             Int       @default(1)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  booking           Booking                 @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  worker            WorkerProfile           @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  customer          CustomerProfile         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  extensionRequests TimerExtensionRequest[]
+  safetyCheckIns    SafetyCheckIn[]
+
+  @@index([bookingId])
+  @@index([workerId])
+  @@index([customerId])
+}
+
+model TimerExtensionRequest {
+  id                   String    @id @default(uuid())
+  bookingId            String
+  timerId              String
+  requestedBy          String
+  additionalMinutes    Int
+  reason               String
+  proposedCompletionAt DateTime
+  status               String    @default("PENDING") // PENDING, APPROVED, REJECTED, EXPIRED
+  requestedAt          DateTime  @default(now())
+  respondedAt          DateTime?
+
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  workTimer WorkTimer @relation(fields: [timerId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([timerId])
 }
 
 model EmergencyCallLog {
@@ -496,7 +557,12 @@ model VisitingCharge {
 model BookingChargeAcknowledgement {
   id                     String   @id @default(uuid())
   bookingId              String   @unique
+  quotationId            String?
   visitingCharge         Float
+  serviceCharge          Float?
+  totalQuotationAmount   Float?
+  isRefundableOrAdjustable Boolean @default(true)
+  terms                  String?
   termsVersion           String   @default("v1.0")
   customerAcknowledgedAt DateTime @default(now())
 
@@ -552,3 +618,4 @@ model TermsAndPolicy {
   active             Boolean  @default(true)
   updatedAt          DateTime @updatedAt
 }
+

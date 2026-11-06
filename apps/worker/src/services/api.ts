@@ -103,7 +103,13 @@ export const api = {
   // Quotes
   createQuote: (payload: {
     jobRequestId: string;
-    proposedPrice: number;
+    proposedPrice?: number;
+    visitingCharge?: number;
+    serviceCharge?: number;
+    additionalCharges?: number;
+    isVisitingRefundableOrAdjustable?: boolean;
+    visitingChargeTerms?: string;
+    isFinalPriceEstimated?: boolean;
     estimatedArrivalMinutes: number;
     scopeDescription: string;
     exclusions?: string;
@@ -116,6 +122,34 @@ export const api = {
 
   counterofferQuote: (quoteId: string, payload: { proposedPrice: number; message: string }) =>
     request<{ message: string; quote: any; negotiation: any }>(`/quotes/${quoteId}/counteroffer`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  // Work Timer & Safety Escalation System
+  startWorkTimer: (bookingId: string, payload: { hours?: number; minutes?: number; durationMinutes?: number; gracePeriodMinutes?: number }) =>
+    request<{ message: string; timer: any; safetyCheckIn: any }>(`/bookings/${bookingId}/work-timer/start`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getBookingTimerStatus: (bookingId: string) =>
+    request<any>(`/bookings/${bookingId}/work-timer`),
+
+  requestTimerExtension: (bookingId: string, payload: { additionalHours?: number; additionalMinutes?: number; totalAdditionalMinutes?: number; reason: string }) =>
+    request<{ message: string; extension: any }>(`/bookings/${bookingId}/work-timer/request-extension`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  respondToTimerExtension: (bookingId: string, extensionId: string, action: 'APPROVE' | 'REJECT') =>
+    request<{ message: string; extension: any; timer?: any }>(`/bookings/${bookingId}/work-timer/extension/${extensionId}/respond`, {
+      method: 'POST',
+      body: JSON.stringify({ action }),
+    }),
+
+  resetTimerCycle: (bookingId: string, payload: { hours?: number; minutes?: number; durationMinutes?: number }) =>
+    request<{ message: string; timer: any; safetyCheckIn: any }>(`/bookings/${bookingId}/work-timer/reset-cycle`, {
       method: 'POST',
       body: JSON.stringify(payload),
     }),

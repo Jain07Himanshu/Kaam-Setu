@@ -106,9 +106,11 @@ export async function getWorkerCredibility(req: AuthenticatedRequest, res: Respo
             avatarUrl: true,
           },
         },
+        workerServices: {
+          include: { serviceCategory: true },
+        },
         identityDocuments: true,
         skillEvidences: {
-          where: { verificationStatus: 'VERIFIED' },
           select: {
             id: true,
             skillCategory: true,
@@ -116,6 +118,8 @@ export async function getWorkerCredibility(req: AuthenticatedRequest, res: Respo
             issuingOrganisation: true,
             verificationStatus: true,
             reviewedAt: true,
+            submittedAt: true,
+            issueDate: true,
           },
         },
         rplApplications: {
@@ -207,12 +211,20 @@ export async function getWorkerCredibility(req: AuthenticatedRequest, res: Respo
     const isIdentityVerified = worker.identityDocuments.some(v => v.verificationStatus === 'VERIFIED');
     const pendingIdentity = worker.identityDocuments.some(v => v.verificationStatus === 'SUBMITTED' || v.verificationStatus === 'UNDER_REVIEW');
 
+    const primaryCategory = worker.workerServices[0]?.serviceCategory?.name || 'Trade Professional';
+    const experienceYears = worker.workerServices[0]?.experienceYears || 5;
+    const serviceArea = `Within ${worker.serviceRadiusKm} km radius`;
+
     return res.status(200).json({
       workerId: worker.id,
       userId: worker.userId,
       name: worker.user.name,
       avatarUrl: worker.user.avatarUrl,
       bio: worker.bio,
+      category: primaryCategory,
+      serviceCategories: worker.workerServices.map(ws => ws.serviceCategory.name),
+      experienceYears,
+      serviceArea,
       skills: JSON.parse(worker.skills || '[]'),
       overallRating: worker.ratingAvg,
       reviewCount: worker.ratingCount,
@@ -221,7 +233,7 @@ export async function getWorkerCredibility(req: AuthenticatedRequest, res: Respo
         phoneVerified: Boolean(worker.user.phone),
         identityVerified: isIdentityVerified,
         identityStatus: isIdentityVerified ? 'VERIFIED' : (pendingIdentity ? 'PENDING' : 'NOT_SUBMITTED'),
-        hasVerifiedSkillDocs: worker.skillEvidences.length > 0,
+        hasVerifiedSkillDocs: worker.skillEvidences.some(s => s.verificationStatus === 'VERIFIED'),
         hasVerifiedCertificates: verifiedCertificates.length > 0,
         hasRplRecognition: worker.rplApplications.length > 0,
       },
@@ -242,11 +254,12 @@ export async function getWorkerCredibility(req: AuthenticatedRequest, res: Respo
         communication: avgCommunication || worker.ratingAvg,
         totalReviews,
       },
-      verifiedSkillEvidences: worker.skillEvidences,
+      verifiedSkillEvidences: worker.skillEvidences.filter(s => s.verificationStatus === 'VERIFIED'),
+      skillEvidences: worker.skillEvidences,
       rplRecognitions: worker.rplApplications,
       verifiedCertificates,
       badges: refreshedBadges,
-      recentReviews: reviews.slice(0, 5),
+      recentReviews: reviews,
     });
   } catch (error) {
     console.error('Get worker credibility error:', error);

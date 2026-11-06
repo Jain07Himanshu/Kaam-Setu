@@ -60,6 +60,42 @@ export const NotificationToast: React.FC = () => {
         link: `/bookings/${booking.id}`,
         type: 'booking',
       });
+    } else if (lastEvent.type === 'booking.timer.started') {
+      const { timer } = lastEvent.payload;
+      setToast({
+        id: Date.now().toString(),
+        title: 'Work Timer Started ⏱️',
+        message: `Your service pro has started work. Expected completion: ${new Date(timer.expectedCompletionAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}.`,
+        link: `/bookings/${timer.bookingId}`,
+        type: 'booking',
+      });
+    } else if (lastEvent.type === 'booking.safety.alert.created') {
+      const { bookingId } = lastEvent.payload;
+      setToast({
+        id: Date.now().toString(),
+        title: '⚠️ Safety Check-In Required!',
+        message: 'Scheduled service duration has expired. Please confirm your safety.',
+        link: `/bookings/${bookingId}`,
+        type: 'status',
+      });
+    } else if (lastEvent.type === 'booking.timer.extension.requested') {
+      const { bookingId, extension } = lastEvent.payload;
+      setToast({
+        id: Date.now().toString(),
+        title: 'Worker Requested More Time ⏱️',
+        message: `Additional ${extension?.additionalMinutes || 30} mins requested: "${extension?.reason || 'Additional work required'}".`,
+        link: `/bookings/${bookingId}`,
+        type: 'status',
+      });
+    } else if (lastEvent.type === 'booking.safety.escalated') {
+      const { bookingId } = lastEvent.payload;
+      setToast({
+        id: Date.now().toString(),
+        title: '🚨 Emergency Escalation Dispatched!',
+        message: 'Service alert unacknowledged. Emergency contacts are being dialed.',
+        link: `/bookings/${bookingId}`,
+        type: 'status',
+      });
     }
   }, [lastEvent]);
 

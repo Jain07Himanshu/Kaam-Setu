@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSocket } from '../context/SocketContext';
 import { api } from '../services/api';
+import { WorkTimerWorkerWidget } from '../components/WorkTimerWorkerWidget';
 import {
   CalendarCheck,
   Clock,
@@ -14,6 +15,7 @@ import {
   X,
   Car,
   Wrench,
+  Hourglass,
 } from 'lucide-react';
 
 export const WorkerBookingsPage: React.FC = () => {
@@ -26,6 +28,13 @@ export const WorkerBookingsPage: React.FC = () => {
   const [inputOtp, setInputOtp] = useState('');
   const [otpError, setOtpError] = useState<string | null>(null);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+
+  // Mandatory Post-OTP Set Duration Modal State
+  const [durationModalBooking, setDurationModalBooking] = useState<any | null>(null);
+  const [durationHours, setDurationHours] = useState(2);
+  const [durationMinutes, setDurationMinutes] = useState(30);
+  const [isStartingTimer, setIsStartingTimer] = useState(false);
+  const [durationError, setDurationError] = useState<string | null>(null);
 
   const [actionFeedback, setActionFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -70,13 +79,48 @@ export const WorkerBookingsPage: React.FC = () => {
     setOtpError(null);
 
     try {
+      const booked = otpModalBooking;
       await handleStatusUpdate(otpModalBooking.id, 'WORK_STARTED', inputOtp.trim());
       setOtpModalBooking(null);
       setInputOtp('');
+
+      // Open mandatory SET EXPECTED WORK DURATION screen immediately after OTP verification
+      setDurationModalBooking(booked);
+      setDurationHours(2);
+      setDurationMinutes(30);
+      setDurationError(null);
     } catch (err: any) {
       setOtpError(err.message || 'Invalid start code. Please check with customer.');
     } finally {
       setIsVerifyingOtp(false);
+    }
+  };
+
+  const handleStartWorkTimer = async () => {
+    if (!durationModalBooking) return;
+    const totalMinutes = durationHours * 60 + durationMinutes;
+    if (totalMinutes <= 0) {
+      setDurationError('Please enter an expected duration greater than 0 minutes');
+      return;
+    }
+
+    setIsStartingTimer(true);
+    setDurationError(null);
+
+    try {
+      await api.startWorkTimer(durationModalBooking.id, {
+        durationMinutes: totalMinutes,
+      });
+      setActionFeedback({
+        type: 'success',
+        message: 'Work timer started! Customer notified of expected completion.',
+      });
+      setDurationModalBooking(null);
+      fetchBookings();
+    } catch (err: any) {
+      setDurationError(err.message || 'Failed to start work timer');
+    } finally {
+      setIsStartingTimer(false);
     }
   };
 
@@ -185,6 +229,15 @@ export const WorkerBookingsPage: React.FC = () => {
                       <span>Urgency: {booking.jobRequest?.urgency}</span>
                     </div>
                   </div>
+
+                  {/* Active Service Work Timer & Safety Monitor */}
+                  {isWorkStarted && (
+                    <WorkTimerWorkerWidget
+                      bookingId={booking.id}
+                      isWorkStarted={isWorkStarted}
+                      onRefreshBooking={fetchBookings}
+                    />
+                  )}
 
                   {isCompleted && booking.review && (
                     <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-200/60 text-xs space-y-1">
@@ -312,7 +365,92 @@ export const WorkerBookingsPage: React.FC = () => {
                 disabled={isVerifyingOtp}
                 className="px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primaryDark text-white text-xs font-bold shadow-sm transition-all"
               >
-                {isVerifyingOtp ? 'Verifying...' : 'Verify & Start Work'}
+                {isVerifyingOtp ? 'Verifying...' : 'Verify & Set Work Duration'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MANDATORY POST-OTP SET EXPECTED WORK DURATION MODAL */}
+      {durationModalBooking && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-4 shadow-2xl border border-gray-100 animate-in zoom-in-95">
+            <div className="flex items-center gap-2 pb-3 border-b border-gray-100">
+              <div className="w-10 h-10 rounded-xl bg-brand-surface text-brand-primary flex items-center justify-center font-bold">
+                <Hourglass className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-charcoal uppercase tracking-wide">
+                  SET EXPECTED WORK DURATION
+                </h3>
+                <p className="text-xs text-emerald-700 font-semibold">
+                  ✓ Start OTP Verified. Service ready to begin.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Please enter the estimated time required to complete the service. The work timer will begin only after you confirm the duration. The customer will be informed of this expected completion time in real-time.
+            </p>
+
+            {durationError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl">
+                {durationError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <label className="block font-bold text-gray-700 uppercase mb-1">
+                  Hours
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={24}
+                  value={durationHours}
+                  onChange={(e) => setDurationHours(Number(e.target.value))}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold focus:border-brand-primary outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 uppercase mb-1">
+                  Minutes
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={59}
+                  step={5}
+                  value={durationMinutes}
+                  onChange={(e) => setDurationMinutes(Number(e.target.value))}
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold focus:border-brand-primary outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-brand-surface/60 rounded-xl border border-brand-secondary/30 flex justify-between items-center text-xs">
+              <span className="text-gray-500 font-medium">Expected Completion Time:</span>
+              <span className="font-black text-brand-primary text-base">
+                {new Date(Date.now() + (durationHours * 60 + durationMinutes) * 60000).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true,
+                })}
+              </span>
+            </div>
+
+            <div className="pt-3 border-t border-gray-100 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={handleStartWorkTimer}
+                disabled={isStartingTimer}
+                className="w-full py-3 bg-brand-primary hover:bg-brand-primaryDark text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md shadow-brand-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Hourglass className="w-4 h-4 text-brand-cream" />
+                <span>{isStartingTimer ? 'Starting Work Timer...' : 'START WORK TIMER'}</span>
               </button>
             </div>
           </div>

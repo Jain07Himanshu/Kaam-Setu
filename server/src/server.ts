@@ -1,6 +1,7 @@
 import http from 'http';
 import { createApp } from './app.js';
 import { initializeSockets } from './sockets/socketManager.js';
+import { WorkTimerEngine } from './modules/safety/workTimerEngine.js';
 import { config } from './config/index.js';
 
 const app = createApp();
@@ -8,6 +9,9 @@ const httpServer = http.createServer(app);
 
 // Initialize Socket.IO with WebSocket + polling
 initializeSockets(httpServer);
+
+// Start authoritative server-side WorkTimer & Safety monitoring loop
+WorkTimerEngine.startMonitoring(3000);
 
 httpServer.listen(config.port, () => {
   console.log(`====================================================`);

@@ -24,7 +24,12 @@ export const JobOffersPage: React.FC = () => {
 
   // Quote Modal State
   const [quoteModalOffer, setQuoteModalOffer] = useState<any | null>(null);
-  const [proposedPrice, setProposedPrice] = useState<number>(450);
+  const [visitingCharge, setVisitingCharge] = useState<number>(150);
+  const [serviceCharge, setServiceCharge] = useState<number>(300);
+  const [additionalCharges, setAdditionalCharges] = useState<number>(0);
+  const [isVisitingRefundableOrAdjustable, setIsVisitingRefundableOrAdjustable] = useState<boolean>(true);
+  const [visitingChargeTerms, setVisitingChargeTerms] = useState<string>('Standard visiting inspection fee, adjusted against final service bill upon hire.');
+  const [isFinalPriceEstimated, setIsFinalPriceEstimated] = useState<boolean>(false);
   const [estimatedArrival, setEstimatedArrival] = useState<number>(25);
   const [scopeDescription, setScopeDescription] = useState<string>('');
   const [exclusions, setExclusions] = useState<string>('Parts and replacement hardware to be reimbursed at cost.');
@@ -56,15 +61,23 @@ export const JobOffersPage: React.FC = () => {
 
   const handleOpenQuoteModal = (offer: any) => {
     setQuoteModalOffer(offer);
-    const suggested = offer.jobRequest?.budgetMin || 350;
-    setProposedPrice(suggested);
+    const suggested = offer.jobRequest?.budgetMin || 450;
+    const vFee = 150;
+    setVisitingCharge(vFee);
+    setServiceCharge(Math.max(100, suggested - vFee));
+    setAdditionalCharges(0);
+    setIsVisitingRefundableOrAdjustable(true);
+    setVisitingChargeTerms('Standard visiting inspection fee, adjusted against final service bill upon hire.');
+    setIsFinalPriceEstimated(false);
     setScopeDescription(`Standard diagnostic and complete repair for: ${offer.jobRequest?.title}`);
   };
 
+  const totalCalculatedAmount = (Number(visitingCharge) || 0) + (Number(serviceCharge) || 0) + (Number(additionalCharges) || 0);
+
   const submitQuote = async () => {
     if (!quoteModalOffer) return;
-    if (proposedPrice <= 0) {
-      setFeedback({ type: 'error', message: 'Proposed price must be greater than 0' });
+    if (totalCalculatedAmount <= 0) {
+      setFeedback({ type: 'error', message: 'Total quotation amount must be greater than 0' });
       return;
     }
     if (scopeDescription.trim().length < 5) {
@@ -78,7 +91,13 @@ export const JobOffersPage: React.FC = () => {
     try {
       await api.createQuote({
         jobRequestId: quoteModalOffer.jobRequestId,
-        proposedPrice,
+        proposedPrice: totalCalculatedAmount,
+        visitingCharge: Number(visitingCharge) || 0,
+        serviceCharge: Number(serviceCharge) || 0,
+        additionalCharges: Number(additionalCharges) || 0,
+        isVisitingRefundableOrAdjustable,
+        visitingChargeTerms,
+        isFinalPriceEstimated,
         estimatedArrivalMinutes: estimatedArrival,
         scopeDescription,
         exclusions,
@@ -86,7 +105,7 @@ export const JobOffersPage: React.FC = () => {
       });
 
       setQuoteModalOffer(null);
-      setFeedback({ type: 'success', message: 'Quote submitted successfully! Customer has been notified.' });
+      setFeedback({ type: 'success', message: 'Itemized quotation submitted successfully! Customer must acknowledge visiting charges before accepting.' });
       fetchOffers();
     } catch (err: any) {
       setFeedback({ type: 'error', message: err.message || 'Failed to submit quote' });
@@ -343,18 +362,75 @@ export const JobOffersPage: React.FC = () => {
             </div>
 
             <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-700 uppercase mb-1">
-                    Your Proposed Price (₹) *
-                  </label>
-                  <input
-                    type="number"
-                    value={proposedPrice}
-                    onChange={(e) => setProposedPrice(Number(e.target.value))}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-base font-black text-brand-primary focus:border-brand-primary outline-none"
-                  />
+              {/* Itemized Price Breakdown */}
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200/80 space-y-3">
+                <div className="font-extrabold text-charcoal flex items-center justify-between border-b border-gray-200 pb-2">
+                  <span className="uppercase text-[11px] text-gray-600">Quotation Price Breakdown (Itemized)</span>
+                  <span className="text-base font-black text-brand-primary">Total: ₹{totalCalculatedAmount}</span>
                 </div>
+
+                <div className="grid grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[10px] uppercase mb-1">
+                      Visiting Fee (₹) *
+                    </label>
+                    <input
+                      type="number"
+                      value={visitingCharge}
+                      onChange={(e) => setVisitingCharge(Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm font-bold focus:border-brand-primary outline-none bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[10px] uppercase mb-1">
+                      Service Charge (₹) *
+                    </label>
+                    <input
+                      type="number"
+                      value={serviceCharge}
+                      onChange={(e) => setServiceCharge(Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm font-bold focus:border-brand-primary outline-none bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[10px] uppercase mb-1">
+                      Additional (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={additionalCharges}
+                      onChange={(e) => setAdditionalCharges(Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm font-bold focus:border-brand-primary outline-none bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-1 text-[11px]">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-charcoal">
+                    <input
+                      type="checkbox"
+                      checked={isVisitingRefundableOrAdjustable}
+                      onChange={(e) => setIsVisitingRefundableOrAdjustable(e.target.checked)}
+                      className="w-4 h-4 rounded text-brand-primary focus:ring-brand-primary"
+                    />
+                    <span>Visiting fee is 100% adjustable against the final bill upon hire</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-amber-900">
+                    <input
+                      type="checkbox"
+                      checked={isFinalPriceEstimated}
+                      onChange={(e) => setIsFinalPriceEstimated(e.target.checked)}
+                      className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
+                    />
+                    <span>Service charge is subject to final quotation upon physical inspection</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-gray-700 uppercase mb-1">
                     Estimated Arrival (Mins)
@@ -364,6 +440,19 @@ export const JobOffersPage: React.FC = () => {
                     value={estimatedArrival}
                     onChange={(e) => setEstimatedArrival(Number(e.target.value))}
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-bold focus:border-brand-primary outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 uppercase mb-1">
+                    Visiting Fee Conditions
+                  </label>
+                  <input
+                    type="text"
+                    value={visitingChargeTerms}
+                    onChange={(e) => setVisitingChargeTerms(e.target.value)}
+                    placeholder="e.g. Adjusted against final bill"
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-xs focus:border-brand-primary outline-none"
                   />
                 </div>
               </div>

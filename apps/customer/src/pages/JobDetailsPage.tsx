@@ -16,7 +16,9 @@ import {
   X,
   MapPin,
   Calendar,
+  Info,
 } from 'lucide-react';
+import { WorkerCredibilityCard } from '../components/WorkerCredibilityCard';
 
 export const JobDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +32,7 @@ export const JobDetailsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [acknowledgedQuotes, setAcknowledgedQuotes] = useState<Record<string, boolean>>({});
 
   // Counteroffer Modal State
   const [counterModalQuote, setCounterModalQuote] = useState<any | null>(null);
@@ -83,10 +86,18 @@ export const JobDetailsPage: React.FC = () => {
     }
   }, [lastEvent]);
 
-  const handleAcceptQuote = async (quoteId: string) => {
+  const handleAcceptQuote = async (quote: any) => {
     setActionError(null);
+    if (!acknowledgedQuotes[quote.id]) {
+      setActionError('You must review and check the visiting charge acknowledgement box before accepting this quote.');
+      return;
+    }
     try {
-      const res = await api.acceptQuote(quoteId);
+      const res = await api.acceptQuote(quote.id, {
+        acknowledgedVisitingCharge: quote.visitingCharge !== undefined ? quote.visitingCharge : 150,
+        confirmedAcknowledgement: true,
+        termsVersion: quote.termsVersion || 'v1.0',
+      });
       setActionSuccess('Quote accepted! Booking confirmed.');
       fetchJobDetails();
       // Navigate to booking tracker
@@ -190,27 +201,32 @@ export const JobDetailsPage: React.FC = () => {
 
       {/* Confirmed Booking Banner (if already booked) */}
       {job.booking && (
-        <div className="p-5 rounded-2xl bg-brand-surface border-2 border-brand-secondary/50 shadow-md flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-primary text-white flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-brand-cream" />
-            </div>
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider text-brand-primaryDark">
-                Booking Confirmed
+        <div className="space-y-6">
+          <div className="p-5 rounded-2xl bg-brand-surface border-2 border-brand-secondary/50 shadow-md flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-primary text-white flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-brand-cream" />
               </div>
-              <h4 className="text-sm font-bold text-charcoal">
-                Assigned Pro: {job.booking.worker?.user?.name} · Agreed Price: ₹{job.booking.agreedPrice}
-              </h4>
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wider text-brand-primaryDark">
+                  Booking Confirmed
+                </div>
+                <h4 className="text-sm font-bold text-charcoal">
+                  Assigned Pro: {job.booking.worker?.user?.name} · Agreed Price: ₹{job.booking.agreedPrice}
+                </h4>
+              </div>
             </div>
+            <button
+              onClick={() => navigate(`/bookings/${job.booking.id}`)}
+              className="px-4 py-2 rounded-xl bg-brand-primary hover:bg-brand-primaryDark text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+            >
+              <span>View Service Tracking</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            onClick={() => navigate(`/bookings/${job.booking.id}`)}
-            className="px-4 py-2 rounded-xl bg-brand-primary hover:bg-brand-primaryDark text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
-          >
-            <span>View Service Tracking</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+
+          {/* Unlocked Worker Credibility Profile Section */}
+          <WorkerCredibilityCard workerId={job.booking.workerId} />
         </div>
       )}
 
@@ -346,11 +362,56 @@ export const JobDetailsPage: React.FC = () => {
                       </div>
 
                       <div className="text-right">
+                        <div className="text-xs text-gray-400 font-semibold uppercase">Total Estimate</div>
                         <div className="text-2xl font-black text-brand-primary">₹{quote.proposedPrice}</div>
                         <div className="text-[11px] font-semibold text-gray-500 flex items-center justify-end gap-1">
                           <Clock className="w-3 h-3 text-gray-400" />
                           <span>ETA: ~{quote.estimatedArrivalMinutes} min</span>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Visually Separated Itemized Quotation Breakdown */}
+                    <div className="p-4 rounded-2xl bg-brand-surface/40 border border-brand-secondary/30 space-y-2.5 text-xs">
+                      <div className="flex items-center justify-between font-bold text-charcoal border-b border-brand-secondary/20 pb-2">
+                        <span className="flex items-center gap-1.5 text-brand-primaryDark font-extrabold uppercase text-[11px] tracking-wide">
+                          <DollarSign className="w-4 h-4 text-brand-primary" />
+                          <span>Quotation Price Breakdown</span>
+                        </span>
+                        <span className="text-sm font-black text-brand-primary">₹{quote.proposedPrice}</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-[11px]">
+                        <div className="p-2.5 bg-white rounded-xl border border-gray-100 shadow-2xs">
+                          <span className="text-gray-400 block text-[10px] font-medium">Visiting Charge</span>
+                          <span className="font-black text-charcoal text-xs">₹{quote.visitingCharge ?? 150}</span>
+                        </div>
+                        <div className="p-2.5 bg-white rounded-xl border border-gray-100 shadow-2xs">
+                          <span className="text-gray-400 block text-[10px] font-medium">Service Charge</span>
+                          <span className="font-black text-charcoal text-xs">
+                            ₹{quote.serviceCharge ?? Math.max(0, quote.proposedPrice - (quote.visitingCharge ?? 150))}
+                          </span>
+                        </div>
+                        <div className="p-2.5 bg-white rounded-xl border border-gray-100 shadow-2xs">
+                          <span className="text-gray-400 block text-[10px] font-medium">Additional</span>
+                          <span className="font-black text-charcoal text-xs">₹{quote.additionalCharges ?? 0}</span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 pt-1 text-[11px]">
+                        <div className="flex items-center gap-1.5 text-emerald-700 font-semibold">
+                          <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>
+                            {quote.isVisitingRefundableOrAdjustable !== false
+                              ? 'Visiting fee is 100% adjustable against final bill.'
+                              : 'Visiting fee is non-refundable inspection fee.'}
+                          </span>
+                        </div>
+                        {quote.isFinalPriceEstimated && (
+                          <div className="flex items-center gap-1.5 text-amber-800 font-medium bg-amber-50/60 p-2 rounded-lg border border-amber-200/60">
+                            <Info className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                            <span>Service charge is subject to the worker's final on-site quotation upon inspection.</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -372,6 +433,35 @@ export const JobDetailsPage: React.FC = () => {
                         <p className="text-gray-500 italic">"{quote.workerNote}"</p>
                       )}
                     </div>
+
+                    {/* Mandatory Visiting Charge Acknowledgement Box */}
+                    {!isAccepted && !isRejected && !job.booking && (
+                      <div className="p-4 rounded-2xl bg-amber-50/80 border-2 border-amber-300 space-y-2.5 text-xs animate-in fade-in">
+                        <div className="font-black text-amber-950 flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
+                          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                          <span>VISITING CHARGE ACKNOWLEDGEMENT</span>
+                        </div>
+                        <p className="text-amber-900 leading-relaxed text-[11px] bg-white/70 p-2.5 rounded-xl border border-amber-200">
+                          "I understand that the worker charges ₹{quote.visitingCharge ?? 150} as a visiting fee for inspecting and visiting the service location. I have reviewed whether this amount is refundable or adjustable against the final service charge."
+                        </p>
+                        <label className="flex items-start gap-2.5 cursor-pointer pt-1 select-none">
+                          <input
+                            type="checkbox"
+                            checked={!!acknowledgedQuotes[quote.id]}
+                            onChange={(e) =>
+                              setAcknowledgedQuotes((prev) => ({
+                                ...prev,
+                                [quote.id]: e.target.checked,
+                              }))
+                            }
+                            className="w-4 h-4 mt-0.5 rounded text-brand-primary focus:ring-brand-primary"
+                          />
+                          <span className="text-xs font-bold text-amber-950 leading-tight">
+                            I have read and understood the visiting charges and conditions.
+                          </span>
+                        </label>
+                      </div>
+                    )}
 
                     {/* Negotiation History (if any counters exist) */}
                     {quote.negotiations && quote.negotiations.length > 0 && (
@@ -415,7 +505,7 @@ export const JobDetailsPage: React.FC = () => {
                             setCounterModalQuote(quote);
                             setCounterPrice(Math.max(50, quote.proposedPrice - 50));
                           }}
-                          className="px-3.5 py-2 rounded-xl border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold transition-colors flex items-center gap-1"
+                          className="px-3.5 py-2.5 rounded-xl border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold transition-colors flex items-center gap-1"
                         >
                           <MessageSquare className="w-3.5 h-3.5 text-gray-500" />
                           <span>Counteroffer</span>
@@ -424,18 +514,24 @@ export const JobDetailsPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleRejectQuote(quote.id)}
-                          className="px-3 py-2 rounded-xl hover:bg-red-50 text-red-600 text-xs font-semibold transition-colors"
+                          className="px-3.5 py-2.5 rounded-xl hover:bg-red-50 text-red-600 text-xs font-semibold transition-colors"
                         >
-                          Reject
+                          Reject Quotation
                         </button>
 
                         <button
                           type="button"
-                          onClick={() => handleAcceptQuote(quote.id)}
-                          className="flex-1 py-2 rounded-xl bg-brand-primary hover:bg-brand-primaryDark text-white text-xs font-bold shadow-md shadow-brand-primary/20 transition-all flex items-center justify-center gap-1"
+                          onClick={() => handleAcceptQuote(quote)}
+                          disabled={!acknowledgedQuotes[quote.id]}
+                          className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm ${
+                            acknowledgedQuotes[quote.id]
+                              ? 'bg-brand-primary hover:bg-brand-primaryDark text-white shadow-brand-primary/20 cursor-pointer'
+                              : 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-70'
+                          }`}
+                          title={!acknowledgedQuotes[quote.id] ? 'Please check the acknowledgement checkbox above to accept this quote' : ''}
                         >
-                          <CheckCircle className="w-4 h-4 text-brand-cream" />
-                          <span>Accept & Book (₹{quote.proposedPrice})</span>
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Accept Quotation (₹{quote.proposedPrice})</span>
                         </button>
                       </>
                     )}

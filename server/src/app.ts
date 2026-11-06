@@ -28,6 +28,7 @@ import * as workerVerificationController from './modules/workers/workerVerificat
 import * as credibilityController from './modules/credibility/credibilityController.js';
 import * as visitingChargesController from './modules/pricing/visitingChargesController.js';
 import * as safetyController from './modules/safety/safetyController.js';
+import * as workTimerController from './modules/safety/workTimerController.js';
 import * as certificateVerificationController from './modules/certificates/certificateVerificationController.js';
 import * as adminController from './modules/admin/adminController.js';
 
@@ -141,7 +142,7 @@ export function createApp() {
   app.patch('/api/worker/visiting-charges', authenticate, visitingChargesController.updateMyVisitingCharges);
   app.post('/api/bookings/:id/visiting-charge-acknowledgement', authenticate, visitingChargesController.acknowledgeBookingVisitingCharge);
 
-  // 16. Customer Safety & Emergency SOS Engine
+  // 16. Customer Safety, Work Timer & Emergency SOS Engine
   app.post('/api/safety/sos', authenticate, safetyController.triggerSos);
   app.post('/api/safety/:id/acknowledge', authenticate, safetyController.resolveSos);
   app.post('/api/safety/:id/cancel', authenticate, safetyController.resolveSos);
@@ -150,6 +151,14 @@ export function createApp() {
   app.post('/api/safety/checkin/:id/acknowledge', authenticate, safetyController.acknowledgeSafetyCheckin);
   app.post('/api/safety/checkin/:id/escalate', authenticate, safetyController.escalateSafetyCheckin);
   app.get('/api/bookings/:id/safety-status', authenticate, safetyController.getBookingSafetyStatus);
+
+  // Advanced Work Timer & Automatic SOS Escalation System
+  app.post('/api/bookings/:id/work-timer/start', authenticate, workTimerController.startWorkTimer);
+  app.get('/api/bookings/:id/work-timer', authenticate, workTimerController.getBookingTimerStatus);
+  app.post('/api/bookings/:id/work-timer/request-extension', authenticate, workTimerController.requestTimerExtension);
+  app.post('/api/bookings/:id/work-timer/extension/:extensionId/respond', authenticate, workTimerController.respondToTimerExtension);
+  app.post('/api/bookings/:id/work-timer/acknowledge-safe', authenticate, workTimerController.acknowledgeSafe);
+  app.post('/api/bookings/:id/work-timer/reset-cycle', authenticate, workTimerController.resetTimerCycle);
 
   // 17. Certificate Verification Adapters (QR & DigiLocker)
   app.post('/api/certificates/verify-qr', authenticate, certificateVerificationController.verifyCertificateQr);
